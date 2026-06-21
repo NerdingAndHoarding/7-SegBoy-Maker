@@ -84,6 +84,8 @@ The pass/fail source is `Documentation/BETA_RELEASE_CHECKLIST.md`.
   `https://github.com/NerdingAndHoarding/7-SegBoy-Maker`
 - GitHub beta tag/release created: yes,
   `https://github.com/NerdingAndHoarding/7-SegBoy-Maker/releases/tag/v0.1.0-beta`
+- GitHub Pages enabled: yes,
+  `https://nerdingandhoarding.github.io/7-SegBoy-Maker/`
 - GitLab mirror published:
 - GitHub/GitLab cross-links:
 - Tutorial scripts or links prepared:
@@ -101,3 +103,4 @@ The pass/fail source is `Documentation/BETA_RELEASE_CHECKLIST.md`.
 - GitHub publish result: completed after Git/GitHub CLI installation, GitHub
   login refresh, and specific safe-directory approval for the clean package
   folder.
+- GitHub Pages result: enabled from branch `main`, path `/`.

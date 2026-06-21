@@ -16,6 +16,15 @@ Open this file directly in Chrome:
 No install step is needed. Do not run `npm`. The beta uses plain HTML, CSS, and
 classic JavaScript files.
 
+## Live Web Version
+
+The beta is also published as a GitHub Pages webpage:
+
+https://nerdingandhoarding.github.io/7-SegBoy-Maker/
+
+The online version should open the same `index.html` tool as the downloaded
+folder.
+
 ## What The Beta Can Do
 
 - Load the Minimal RPG starter project.

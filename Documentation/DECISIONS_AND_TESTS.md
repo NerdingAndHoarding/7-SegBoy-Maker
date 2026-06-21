@@ -1561,4 +1561,6 @@ historical reports remain archived.
   `rpg-maker`, `seven-segment-display`.
 - Verified release asset digest from GitHub:
   `sha256:320f36b9cd16cb6fbab86eb28403fa7c203055c356e4bc8372419383962c6cdc`.
+- GitHub Pages enabled from branch `main`, path `/`:
+  `https://nerdingandhoarding.github.io/7-SegBoy-Maker/`.
 - Active milestone advanced to R11-P03: GitLab public mirror.
