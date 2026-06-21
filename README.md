@@ -7,6 +7,9 @@ The beta version open the tool, test the Minimal RPG in the browser,
 export an Arduino sketch, upload it to the 7-SegBoy hardware, and play
 the game on the real display.
 
+## Video Demo of minimal Beta game
+https://youtu.be/jiOBEAVJ4UY
+
 ## Run The Tool
 
 Open this file directly in Chrome:
