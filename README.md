@@ -1,10 +1,10 @@
 # 7-SegBoy Maker Beta
 
-7-SegBoy Maker is a small browser tool for making a minimal RPG for a custom
+7-SegBoy Maker is a browser tool for making a minimal RPGs for a the 7-segBoy. An Arduino Nano powered hand held gameconsole with a
 24-digit seven-segment display.
 
 The beta goal is simple: open the tool, test the Minimal RPG in the browser,
-export an Arduino sketch, upload it to the official 7-SegBoy hardware, and play
+export an Arduino sketch, upload it to the 7-SegBoy hardware, and play
 the game on the real display.
 
 ## Run The Tool
