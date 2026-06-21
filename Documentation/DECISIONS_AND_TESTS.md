@@ -1546,3 +1546,19 @@ historical reports remain archived.
   `C:\Users\ake_s\Documents\MAKE_a_Game__maker\7-SegBoy-Maker-v0.1.0-beta.zip`.
 - R11-P02 remains open until the GitHub repository and `v0.1.0-beta` release
   are actually published.
+
+### R11-P02 GitHub public beta published - 2026-06-21
+
+- GitHub repository published:
+  `https://github.com/NerdingAndHoarding/7-SegBoy-Maker`.
+- Release `v0.1.0-beta` published:
+  `https://github.com/NerdingAndHoarding/7-SegBoy-Maker/releases/tag/v0.1.0-beta`.
+- Release asset uploaded:
+  `7-SegBoy-Maker-v0.1.0-beta.zip`.
+- Verified repository visibility: public.
+- Verified repository topics:
+  `agplv3`, `arduino`, `arduino-nano`, `browser-tool`, `max7219`,
+  `rpg-maker`, `seven-segment-display`.
+- Verified release asset digest from GitHub:
+  `sha256:320f36b9cd16cb6fbab86eb28403fa7c203055c356e4bc8372419383962c6cdc`.
+- Active milestone advanced to R11-P03: GitLab public mirror.

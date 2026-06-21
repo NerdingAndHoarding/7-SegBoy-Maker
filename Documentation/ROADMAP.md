@@ -663,6 +663,12 @@ Acceptance test:
 - A beta release/tag is created with the tested public package.
 - README links to wiring, tutorials, and beta limitations.
 
+Status: complete. Published at:
+`https://github.com/NerdingAndHoarding/7-SegBoy-Maker`
+
+Release:
+`https://github.com/NerdingAndHoarding/7-SegBoy-Maker/releases/tag/v0.1.0-beta`
+
 #### R11-P03: GitLab Public Mirror
 
 Task:

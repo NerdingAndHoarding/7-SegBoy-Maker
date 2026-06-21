@@ -80,8 +80,10 @@ The pass/fail source is `Documentation/BETA_RELEASE_CHECKLIST.md`.
   `C:\Users\ake_s\Documents\MAKE_a_Game__maker\7-SegBoy_Maker_BETA_public_20260621`
 - Release ZIP prepared: yes,
   `C:\Users\ake_s\Documents\MAKE_a_Game__maker\7-SegBoy-Maker-v0.1.0-beta.zip`
-- GitHub repository published:
-- GitHub beta tag/release created:
+- GitHub repository published: yes,
+  `https://github.com/NerdingAndHoarding/7-SegBoy-Maker`
+- GitHub beta tag/release created: yes,
+  `https://github.com/NerdingAndHoarding/7-SegBoy-Maker/releases/tag/v0.1.0-beta`
 - GitLab mirror published:
 - GitHub/GitLab cross-links:
 - Tutorial scripts or links prepared:
@@ -96,6 +98,6 @@ The pass/fail source is `Documentation/BETA_RELEASE_CHECKLIST.md`.
 - Follow-up needed: open `index.html` from the clean public package, export a
   fresh combined sketch from that copy, compile/upload it, and record the final
   figures here.
-- Automatic GitHub publish note: blocked in this Codex shell because neither
-  `git` nor GitHub CLI `gh` is available, and Codex has no GitHub login token.
-  The release ZIP above is ready for manual upload.
+- GitHub publish result: completed after Git/GitHub CLI installation, GitHub
+  login refresh, and specific safe-directory approval for the clean package
+  folder.
