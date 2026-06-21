@@ -1,0 +1,1677 @@
+:root {
+  color-scheme: light;
+  --bg: #eef1f4;
+  --panel: #ffffff;
+  --ink: #16202a;
+  --muted: #607080;
+  --line: #c9d2dc;
+  --accent: #1e6f5c;
+  --accentDark: #155345;
+  --displayBg: #090b0d;
+  --displayCell: #151a1f;
+  --displayOn: #ff3b30;
+  --displayDim: #401211;
+  --warnBg: #fff8d8;
+  --warnLine: #dfc85f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  min-height: 38px;
+  border: 1px solid var(--accentDark);
+  border-radius: 6px;
+  padding: 8px 12px;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+}
+
+button:hover,
+button:focus-visible {
+  background: var(--accentDark);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+input {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: white;
+  color: var(--ink);
+}
+
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: white;
+  color: var(--ink);
+  font: inherit;
+}
+
+select {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: white;
+  color: var(--ink);
+}
+
+label {
+  display: block;
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
+
+.appHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+  background: #fbfcfd;
+}
+
+.appHeader h1 {
+  margin: 0 0 6px;
+  font-size: 1.8rem;
+}
+
+.appHeader p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.projectCommands {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.brandBlock {
+  min-width: 240px;
+}
+
+.appShell {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: 18px;
+}
+
+.hubBand {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.8fr) minmax(440px, 1.7fr);
+  gap: 14px 24px;
+  padding: 14px 0 16px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.projectIdentity h2 {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+}
+
+.projectIdentity label {
+  margin-bottom: 5px;
+}
+
+.projectState {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 12px;
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+#dirtyStateLabel {
+  color: #8b3d18;
+}
+
+#dirtyStateLabel.isSaved {
+  color: var(--accentDark);
+}
+
+.projectSummary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(100px, 1fr));
+  gap: 1px;
+  align-self: stretch;
+  border: 1px solid var(--line);
+  background: var(--line);
+}
+
+.projectSummary div {
+  min-width: 0;
+  padding: 8px 10px;
+  background: #fbfcfd;
+}
+
+.projectSummary span,
+.projectSummary strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.projectSummary span {
+  margin-bottom: 3px;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.musicPanel {
+  margin-bottom: 14px;
+}
+
+.musicAssignGrid {
+  align-items: end;
+}
+
+.musicJsonInput {
+  min-height: 116px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.86rem;
+  resize: vertical;
+}
+
+.musicAssignGrid .musicJsonInput {
+  grid-column: 2 / -1;
+}
+
+.projectSummary strong {
+  font-size: 0.86rem;
+}
+
+.projectSummary .presetSummaryAction {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.projectSummary .presetSummaryAction button {
+  width: 100%;
+  padding: 7px 8px;
+  font-size: 0.82rem;
+}
+
+.toolLinks {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 16px;
+}
+
+.toolLinks a {
+  color: var(--accentDark);
+  font-size: 0.88rem;
+  font-weight: bold;
+}
+
+.toolLinks a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.panel,
+.statusPanel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.statusPanel[hidden] {
+  display: none;
+}
+
+.statusPanel button {
+  flex: 0 0 auto;
+}
+
+.secondaryButton {
+  border-color: var(--line);
+  background: #f8fafb;
+  color: var(--ink);
+}
+
+.secondaryButton:hover,
+.secondaryButton:focus-visible {
+  border-color: var(--accent);
+  background: #dceae6;
+  color: var(--accentDark);
+}
+
+.advancedToolsHidden .advancedOnly {
+  display: none;
+}
+
+.projectDialog {
+  width: min(460px, calc(100% - 32px));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0;
+  color: var(--ink);
+  background: var(--panel);
+}
+
+.projectDialog::backdrop {
+  background: rgba(12, 18, 24, 0.55);
+}
+
+.projectDialog form {
+  padding: 18px;
+}
+
+.projectDialog h2 {
+  margin: 0 0 10px;
+  font-size: 1.2rem;
+}
+
+.projectDialog p {
+  margin: 0 0 14px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.panel {
+  padding: 16px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.panel h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.panel h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.compactHeader {
+  margin-bottom: 10px;
+}
+
+.previewPanel {
+  margin-bottom: 14px;
+  overflow-x: auto;
+}
+
+.preflightPanel {
+  margin-bottom: 14px;
+}
+
+.preflightSummary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 1px;
+  border: 1px solid var(--line);
+  background: var(--line);
+}
+
+.preflightSummary div {
+  min-width: 0;
+  padding: 9px 10px;
+  background: #fbfcfd;
+}
+
+.preflightSummary span,
+.preflightSummary strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.preflightSummary span {
+  margin-bottom: 3px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.preflightColumns {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr);
+  gap: 18px;
+  margin-top: 14px;
+}
+
+.preflightColumns h3 {
+  margin-bottom: 8px;
+}
+
+.preflightCategory,
+.preflightMessage {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.preflightCategory {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) auto;
+  gap: 5px 10px;
+}
+
+.preflightCategory span,
+.preflightMessage p,
+.preflightMessage code {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.preflightCategory span {
+  grid-column: 1 / -1;
+}
+
+.preflightMessage strong,
+.preflightMessage p,
+.preflightMessage code {
+  display: block;
+}
+
+.preflightMessage p {
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+.preflightMessage code {
+  overflow-wrap: anywhere;
+}
+
+.preflightMessage.isBlocker strong {
+  color: #9a251e;
+}
+
+.preflightMessage.isWarning strong {
+  color: #6d5900;
+}
+
+.preflightAdvice {
+  margin-top: 5px;
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: bold;
+}
+
+.segmentEditor {
+  min-width: 0;
+}
+
+.segmentEditorScroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.segmentEditorGrid {
+  display: grid;
+  grid-template-columns: repeat(8, 64px);
+  grid-template-rows: repeat(3, 96px);
+  gap: 5px;
+  width: max-content;
+  padding: 10px;
+  background: var(--displayBg);
+}
+
+.segmentEditorGrid.isSingleCell {
+  grid-template-columns: 96px;
+  grid-template-rows: 144px;
+}
+
+.segmentEditorGrid.isSingleCell .segmentEditorCell {
+  width: 96px;
+  height: 144px;
+  min-height: 144px;
+}
+
+.segmentEditorCell {
+  width: 64px;
+  height: 96px;
+  min-height: 96px;
+  padding: 3px;
+  border: 2px solid var(--displayCell);
+  border-radius: 4px;
+  background: var(--displayCell);
+  color: inherit;
+}
+
+.segmentEditorCell:hover,
+.segmentEditorCell:focus-visible {
+  border-color: #7b8996;
+  background: #202830;
+}
+
+.segmentEditorCell.isSelected {
+  border-color: #ffffff;
+  box-shadow: inset 0 0 0 1px var(--displayOn);
+}
+
+.segmentEditorCell svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.segmentEditorCell [data-segment] {
+  cursor: pointer;
+  transition: fill 80ms linear;
+}
+
+.segmentEditor.isReadOnly .segmentEditorCell [data-segment] {
+  cursor: default;
+}
+
+.segmentEditorOff {
+  fill: var(--displayDim);
+}
+
+.segmentEditorOn {
+  fill: var(--displayOn);
+}
+
+.segmentEditorControls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.segmentEditorReadout {
+  min-width: 170px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.segmentToggleGroup {
+  display: grid;
+  grid-template-columns: repeat(8, 42px);
+  gap: 5px;
+}
+
+.segmentToggle {
+  width: 42px;
+  min-height: 38px;
+  padding: 6px 3px;
+  border-color: var(--line);
+  background: #f8fafb;
+  color: var(--ink);
+}
+
+.segmentToggle:hover,
+.segmentToggle:focus-visible,
+.segmentToggle.isActive {
+  border-color: #a8211a;
+  background: #ffe4e1;
+  color: #8f1711;
+}
+
+.glyphPanel,
+.framePanel,
+.animationPanel,
+.visualImportPanel {
+  margin-bottom: 14px;
+}
+
+.globalTextGlyphPanel {
+  border: 1px solid var(--line);
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #f8fafb;
+}
+
+.globalTextGlyphEditor[hidden] {
+  display: none;
+}
+
+.glyphEditorLayout {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.8fr) minmax(360px, 1.6fr);
+  gap: 18px;
+}
+
+.glyphLibraryColumn,
+.glyphEditColumn {
+  min-width: 0;
+}
+
+.glyphLibraryColumn {
+  padding-right: 18px;
+  border-right: 1px solid var(--line);
+}
+
+.glyphLibraryColumn select {
+  width: 100%;
+  min-height: 230px;
+}
+
+.glyphIdentityGrid {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 8px 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.glyphIdentityGrid label,
+.glyphIdentityGrid span {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.glyphIdentityGrid code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.glyphCommandRow,
+.glyphTagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.glyphTagRow label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+}
+
+.glyphTagRow input {
+  width: auto;
+  min-height: auto;
+}
+
+.glyphMemory {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: bold;
+}
+
+.frameEditorLayout {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.7fr) minmax(540px, 1.8fr);
+  gap: 18px;
+}
+
+.frameLibraryColumn,
+.frameEditColumn {
+  min-width: 0;
+}
+
+.frameLibraryColumn {
+  padding-right: 18px;
+  border-right: 1px solid var(--line);
+}
+
+.frameLibraryColumn select {
+  width: 100%;
+  min-height: 230px;
+}
+
+.frameIdentityGrid {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 8px 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.frameIdentityGrid label,
+.frameIdentityGrid span {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.frameIdentityGrid code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.frameCommandRow,
+.frameGlyphControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.frameGlyphControls label {
+  margin: 0;
+}
+
+.frameGlyphControls select {
+  min-width: 220px;
+}
+
+.frameWarning {
+  min-height: 1.3em;
+  margin-top: 10px;
+  color: #9a251e;
+  font-size: 0.88rem;
+  font-weight: bold;
+}
+
+.frameMemory {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: bold;
+}
+
+.animationEditorLayout {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.7fr) minmax(540px, 1.8fr);
+  gap: 18px;
+}
+
+.animationLibraryColumn,
+.animationEditColumn {
+  min-width: 0;
+}
+
+.animationLibraryColumn {
+  padding-right: 18px;
+  border-right: 1px solid var(--line);
+}
+
+.animationLibraryColumn select {
+  width: 100%;
+  min-height: 230px;
+}
+
+.animationIdentityGrid {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: 8px 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.animationIdentityGrid label,
+.animationIdentityGrid span {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.animationIdentityGrid input[type="checkbox"] {
+  width: auto;
+  min-height: auto;
+  justify-self: start;
+}
+
+.animationIdentityGrid code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.animationCommandRow,
+.animationSequenceTools,
+.animationPlaybackRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.animationSequenceTools select {
+  min-width: 260px;
+}
+
+.animationSequence {
+  width: 100%;
+  min-height: 150px;
+  margin-top: 10px;
+}
+
+.animationPreview {
+  min-height: 365px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.animationPlaybackRow span {
+  min-width: 150px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: bold;
+}
+
+.animationWarning {
+  min-height: 1.3em;
+  margin-top: 10px;
+  color: #9a251e;
+  font-size: 0.88rem;
+  font-weight: bold;
+}
+
+.animationMemory {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: bold;
+}
+
+.importSourceRow,
+.importControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.importSourceName {
+  min-width: 0;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.importSourceInput {
+  width: 100%;
+  min-height: 170px;
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px;
+  resize: vertical;
+  background: #fbfcfd;
+  color: var(--ink);
+  font: 0.88rem/1.45 Consolas, "Courier New", monospace;
+}
+
+.importControls {
+  margin-top: 10px;
+}
+
+.importPreview {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.importEmpty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.importSummary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(110px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.importSummary div {
+  min-width: 0;
+  padding: 8px 10px;
+  border-left: 3px solid var(--accent);
+  background: #f4f7f8;
+}
+
+.importSummary span,
+.importSummary strong {
+  display: block;
+}
+
+.importSummary span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.importAssetRow {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.7fr) minmax(180px, 1fr) minmax(150px, 0.8fr);
+  gap: 8px 12px;
+  align-items: baseline;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.importAssetRow code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.importByteList {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.importMessageBlock {
+  margin-top: 14px;
+}
+
+.importMessageBlock h3 {
+  margin-bottom: 6px;
+}
+
+.importMessageBlock ul {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.45;
+}
+
+.importCollision {
+  color: #6d5900;
+}
+
+.importUnsupported {
+  color: var(--muted);
+}
+
+.importErrors {
+  color: #9a251e;
+}
+
+.smallNote,
+.panelText {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.smallNote {
+  margin: 10px 0 0;
+  font-size: 0.9rem;
+}
+
+.panelText {
+  margin: 0 0 14px;
+}
+
+.statusPanel {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  background: var(--warnBg);
+  border-color: var(--warnLine);
+}
+
+.milestoneGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.combinedPanel {
+  grid-column: span 1;
+}
+
+.stepLabel,
+.chipLabel {
+  flex: 0 0 auto;
+  min-width: 30px;
+  min-height: 30px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  padding: 0 9px;
+  background: #dceae6;
+  color: var(--accentDark);
+  font-weight: bold;
+  font-size: 0.84rem;
+}
+
+.roomMiniGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(80px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.roomCell {
+  border-color: var(--line);
+  background: #f8fafb;
+  color: var(--ink);
+}
+
+.roomCell:hover,
+.roomCell:focus-visible,
+.selectedRoom {
+  border-color: var(--accent);
+  background: #dceae6;
+  color: var(--accentDark);
+}
+
+.settingsGrid {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(90px, 260px);
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.settingsGrid label {
+  margin: 0;
+}
+
+.notesList {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.roomCreateRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, max-content));
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.roomCreateRow label {
+  margin: 0;
+}
+
+.worldOverviewToolbar {
+  display: grid;
+  grid-template-columns: max-content minmax(120px, 1fr) max-content minmax(150px, 1fr);
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.worldOverviewToolbar label {
+  margin: 0;
+}
+
+.worldOverviewToolbar button {
+  min-height: 36px;
+}
+
+.worldRoomProperties,
+.worldPaletteToolbar {
+  display: grid;
+  grid-template-columns: max-content minmax(130px, 1fr) max-content minmax(150px, 1fr);
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.worldRoomProperties label,
+.worldPaletteToolbar label {
+  margin: 0;
+}
+
+.worldPaletteSlots {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(64px, 1fr));
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.worldPaletteSlot {
+  min-height: 54px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #f8fafb;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.worldPaletteSlot.isSelected {
+  border-color: #ff3b30;
+  outline: 2px solid #ff3b30;
+  outline-offset: 1px;
+}
+
+.worldPaletteSlot.isBlocking {
+  box-shadow: inset 0 -5px 0 #9a251e;
+}
+
+.worldPaletteSlot code,
+.worldPaletteSlot span {
+  display: block;
+  font-size: 0.72rem;
+}
+
+.worldRoomDisplayEditor {
+  min-height: 360px;
+  margin-bottom: 12px;
+}
+
+.worldRoomDisplayEditor .segmentEditorCell.hasPlayerStart::after {
+  content: "1";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  z-index: 3;
+  min-width: 22px;
+  padding: 1px 3px;
+  transform: translate(-50%, -50%);
+  border: 2px solid #ffffff;
+  border-radius: 3px;
+  background: #9a251e;
+  color: #ffffff;
+  font: 700 16px/1 monospace;
+  text-align: center;
+  pointer-events: none;
+}
+
+.worldRoomDisplayEditor .segmentEditorCell {
+  position: relative;
+}
+
+.inlineCheck {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.roomMapGrid {
+  display: grid;
+  grid-template-columns: repeat(var(--world-cols, 2), 46px);
+  grid-auto-rows: 32px;
+  gap: 3px;
+  width: 100%;
+  max-height: 300px;
+  overflow: auto;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid var(--line);
+  background: #f8fafb;
+}
+
+.roomMapCell {
+  min-height: 32px;
+  width: 46px;
+  padding: 0;
+  border: 1px solid #c4cbd3;
+  border-radius: 4px;
+  background: white;
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.roomMapCell.hasRoom {
+  border-color: var(--accent);
+  background: #dceae6;
+  color: var(--accentDark);
+  font-weight: bold;
+}
+
+.roomMapCell.activeSectionCell {
+  box-shadow: inset 0 -4px 0 #297a69;
+}
+
+.roomMapCell.sectionTone1 {
+  border-color: #a34646;
+}
+
+.roomMapCell.sectionTone2 {
+  border-color: #8a6b19;
+}
+
+.roomMapCell.sectionTone3 {
+  border-color: #28708c;
+}
+
+.roomMapCell.sectionTone4 {
+  border-color: #76509a;
+}
+
+.roomMapCell.sectionTone5 {
+  border-color: #438340;
+}
+
+.roomMapCell.sectionTone6 {
+  border-color: #a34d82;
+}
+
+.roomMapCell.sectionTone7 {
+  border-color: #4c638e;
+}
+
+.roomMapCell.sectionTone8 {
+  border-color: #7d6547;
+}
+
+.roomMapCell.activeRoomCell {
+  outline: 2px solid #ff3b30;
+  outline-offset: 1px;
+}
+
+.editorToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.toolButton {
+  min-width: 44px;
+  border-color: var(--line);
+  background: #f8fafb;
+  color: var(--ink);
+}
+
+.toolButton:hover,
+.toolButton:focus-visible,
+.activeTool {
+  border-color: var(--accent);
+  background: #dceae6;
+  color: var(--accentDark);
+}
+
+.worldFrameGrid {
+  display: grid;
+  grid-template-columns: repeat(8, 42px);
+  grid-template-rows: repeat(3, 42px);
+  gap: 6px;
+  width: max-content;
+  max-width: 100%;
+  margin-bottom: 12px;
+  padding: 8px;
+  background: black;
+  overflow-x: auto;
+}
+
+.frameCell {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  min-height: 42px;
+  padding: 0;
+  border: 1px solid #26303a;
+  border-radius: 4px;
+  background: #101418;
+  color: #ff3b30;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.frameCell:hover,
+.frameCell:focus-visible {
+  background: #1b242c;
+}
+
+.cellChar {
+  display: block;
+  min-height: 1em;
+}
+
+.playerPreview {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  text-shadow: 0 0 5px red;
+  pointer-events: none;
+}
+
+.frameTextInput {
+  resize: vertical;
+  min-height: 78px;
+  margin-bottom: 12px;
+  font-family: Consolas, "Courier New", monospace;
+  letter-spacing: 0;
+  white-space: pre;
+}
+
+.emulatorBlock {
+  margin: 14px 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.saveSlotsPanel {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: #fbfcfd;
+}
+
+.saveSlotList {
+  display: grid;
+  gap: 8px;
+}
+
+.saveSlotRow {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.saveSlotRow:last-child {
+  border-bottom: 0;
+}
+
+.saveSlotLabel {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.emulatorGrid {
+  display: grid;
+  grid-template-columns: repeat(8, 42px);
+  grid-template-rows: repeat(3, 63px);
+  gap: 6px;
+  width: max-content;
+  max-width: 100%;
+  margin-bottom: 12px;
+  padding: 8px;
+  background: black;
+  overflow-x: auto;
+}
+
+.emulatorGrid.isBlank {
+  opacity: 0.25;
+}
+
+.emulatorCell {
+  position: relative;
+  width: 42px;
+  height: 63px;
+  border: 1px solid #26303a;
+  border-radius: 4px;
+  background: #101418;
+  color: #ff3b30;
+  display: grid;
+  place-items: center;
+  font-weight: bold;
+}
+
+.emulatorCell.playerCell {
+  color: white;
+  text-shadow: 0 0 5px red;
+}
+
+.emulatorCell.wallCell {
+  background: #291313;
+}
+
+.emulatorCell.gateCell {
+  background: #1b242c;
+  box-shadow: inset 0 -4px 0 #ff3b30;
+}
+
+.emulatorCell.dpOn::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #ff3b30;
+}
+
+.emulatorCell.textGlyphCell {
+  padding: 2px;
+}
+
+.emulatorCell.textGlyphCell svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.emulatorSegmentOff {
+  fill: var(--displayDim);
+}
+
+.emulatorSegmentOn {
+  fill: var(--displayOn);
+}
+
+.emulatorControls {
+  display: grid;
+  grid-template-columns: repeat(3, 74px);
+  gap: 6px;
+  width: max-content;
+  max-width: 100%;
+  margin-bottom: 12px;
+}
+
+.browserBattleControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  max-width: 100%;
+  margin-bottom: 12px;
+}
+
+.emulatorGrid.battleGridActive {
+  grid-template-columns: repeat(8, 42px);
+  grid-template-rows: repeat(3, 63px);
+  background: var(--displayBg);
+}
+
+.emulatorGrid.battleGridActive .battleCell {
+  width: 42px;
+  height: 63px;
+  min-height: 63px;
+  padding: 2px;
+  border-width: 1px;
+}
+
+.battleBlock {
+  margin: 14px 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.battlePanel {
+  grid-column: 1 / -1;
+}
+
+.manualStatsPanel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.manualStatsGroup {
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.manualStatsGroup legend {
+  padding: 0 6px;
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.manualStatsGrid {
+  display: grid;
+  grid-template-columns: minmax(92px, 0.9fr) minmax(62px, 1fr);
+  gap: 7px 8px;
+  align-items: center;
+}
+
+.manualStatsGrid label {
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.manualStatsGrid input {
+  min-height: 32px;
+  padding: 5px 7px;
+}
+
+.jsonStatImportRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 10px 0 12px;
+}
+
+.jsonStatImportRow .smallNote {
+  flex: 1 1 260px;
+  margin: 0;
+}
+
+.battleGrid {
+  display: grid;
+  grid-template-columns: repeat(8, 64px);
+  grid-template-rows: repeat(3, 96px);
+  gap: 5px;
+  width: max-content;
+  max-width: 100%;
+  margin-bottom: 12px;
+  padding: 10px;
+  background: var(--displayBg);
+  overflow-x: auto;
+}
+
+.battleGrid.isBlank {
+  opacity: 0.18;
+}
+
+.battleCell {
+  position: relative;
+  width: 64px;
+  height: 96px;
+  min-height: 96px;
+  padding: 3px;
+  border: 2px solid var(--displayCell);
+  border-radius: 4px;
+  background: var(--displayCell);
+}
+
+.battleCell svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.battleCell [data-segment] {
+  transition: fill 80ms linear;
+}
+
+.battleSegmentOff {
+  fill: var(--displayDim);
+}
+
+.battleSegmentOn {
+  fill: var(--displayOn);
+}
+
+.battleCell.heroCell .battleSegmentOn,
+.battleCell.enemyCell .battleSegmentOn {
+  filter: drop-shadow(0 0 4px var(--displayOn));
+}
+
+.battleCell.activeCell {
+  border-color: #ffffff;
+  box-shadow: inset 0 0 0 1px var(--displayOn);
+}
+
+.battleCell.blinkCell {
+  background: #241113;
+}
+
+.battleStats,
+.battleControls,
+.battleTargetControls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.battleStats span {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 8px;
+  background: #f8fafb;
+  color: var(--ink);
+  font-weight: bold;
+}
+
+@media (max-width: 760px) {
+  .appHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .projectCommands {
+    justify-content: flex-start;
+  }
+
+  .hubBand {
+    grid-template-columns: 1fr;
+  }
+
+  .projectSummary {
+    grid-template-columns: repeat(2, minmax(100px, 1fr));
+  }
+
+  .preflightSummary {
+    grid-template-columns: repeat(2, minmax(100px, 1fr));
+  }
+
+  .preflightColumns {
+    grid-template-columns: 1fr;
+  }
+
+  .toolLinks {
+    grid-column: 1;
+  }
+
+  .milestoneGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .manualStatsPanel {
+    grid-template-columns: 1fr;
+  }
+
+  .roomCreateRow {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .roomCreateRow button {
+    grid-column: span 2;
+  }
+
+  .worldOverviewToolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .worldOverviewToolbar button {
+    width: 100%;
+  }
+
+  .worldRoomProperties,
+  .worldPaletteToolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .saveSlotRow {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .saveSlotLabel {
+    grid-column: 1 / -1;
+  }
+
+  .worldPaletteSlots {
+    grid-template-columns: repeat(4, minmax(64px, 1fr));
+  }
+
+  .segmentEditorControls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .segmentToggleGroup {
+    grid-template-columns: repeat(4, 42px);
+  }
+
+  .glyphEditorLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .glyphLibraryColumn {
+    padding-right: 0;
+    padding-bottom: 14px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .frameEditorLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .importSummary {
+    grid-template-columns: repeat(2, minmax(100px, 1fr));
+  }
+
+  .importAssetRow {
+    grid-template-columns: 1fr;
+  }
+
+  .importByteList {
+    grid-column: 1;
+  }
+
+  .frameLibraryColumn {
+    padding-right: 0;
+    padding-bottom: 14px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .animationEditorLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .animationLibraryColumn {
+    padding-right: 0;
+    padding-bottom: 14px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+}

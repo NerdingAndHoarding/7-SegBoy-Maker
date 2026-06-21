@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SevenSeg Project Model Tests</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #17191d;
+      color: #f4f5f7;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #17191d;
+    }
+
+    main {
+      width: min(900px, calc(100% - 32px));
+      margin: 32px auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #454a52;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    button {
+      min-height: 42px;
+      padding: 0 18px;
+      border: 1px solid #8f98a5;
+      border-radius: 6px;
+      background: #f4f5f7;
+      color: #17191d;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #dfe3e8;
+    }
+
+    #summary {
+      margin: 24px 0 16px;
+      padding: 14px 16px;
+      border-left: 5px solid #8f98a5;
+      background: #24272d;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    #summary.pass {
+      border-color: #54c97b;
+    }
+
+    #summary.fail {
+      border-color: #ee6b6e;
+    }
+
+    #testResults {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .testResult {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 14px 16px;
+      border: 1px solid #454a52;
+      border-radius: 6px;
+      background: #202329;
+    }
+
+    .testState {
+      font-weight: 800;
+    }
+
+    .testResult.pass .testState {
+      color: #67db8e;
+    }
+
+    .testResult.fail .testState {
+      color: #ff8588;
+    }
+
+    .testName {
+      font-weight: 700;
+    }
+
+    .testMessage {
+      margin-top: 5px;
+      color: #c4c9d0;
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 560px) {
+      header {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+      }
+
+      .testResult {
+        grid-template-columns: 1fr;
+        gap: 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Project Model Tests</h1>
+      <button id="runTestsButton" type="button">Run tests</button>
+    </header>
+    <div id="summary" role="status" aria-live="polite">Waiting to run.</div>
+    <ol id="testResults" aria-label="Test results"></ol>
+  </main>
+
+  <script src="visualAssets.js"></script>
+  <script src="projectModel.js"></script>
+  <script src="projectModelTests.js"></script>
+</body>
+</html>

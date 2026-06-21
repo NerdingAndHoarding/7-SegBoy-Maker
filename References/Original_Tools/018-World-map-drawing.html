@@ -1,0 +1,1204 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>MAX7219 24-Digit Animator (3 x 8 Displays)</title>
+<style>
+body{font-family:Arial}
+
+.topLayout{
+    display:grid;
+    grid-template-columns:max-content max-content;
+    align-items:start;
+    gap:24px;
+}
+.displayPanel,.mapNavPanel{display:flex;flex-direction:column;gap:10px}
+.spriteTools{display:grid;grid-template-columns:max-content max-content;gap:16px;align-items:start}
+.toolsPanel,.coordPanel{display:flex;flex-direction:column;gap:8px}
+.toolsPanel h3{margin:0 0 2px}
+.bottomLayout{
+    display:grid;
+    grid-template-columns:260px minmax(420px,1fr);
+    align-items:start;
+    gap:20px;
+    margin-top:18px;
+}
+.buttonPanel{display:flex;flex-direction:column;gap:8px}
+.buttonPanel .controls{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin:0}
+
+.tableWrap{
+    max-height:240px;
+    overflow-y:auto;
+    display:none;
+}
+
+#digitPane{background:black;padding:10px;display:grid;grid-template-columns:repeat(8,90px);gap:4px;width:max-content}
+#mapPane{display:grid;grid-template-columns:repeat(8,72px);gap:6px;width:max-content}
+.mapCell{text-align:center}
+.mapCell.spriteGap{margin-left:18px}
+.mapCell svg{background:black;padding:4px;width:72px;height:112px}
+.mapLabel{font-weight:bold;margin-bottom:3px}
+.mapBin{width:70px;margin-top:3px}
+#coordMap{border:1px solid #777;background:#ddd;display:block;width:780px;max-width:100%;aspect-ratio:39/21.875}
+.coordTools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0}
+.regionTools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 4px}
+.regionTools input[type="text"]{width:140px}
+.arrowPad{display:grid;grid-template-columns:repeat(3,38px);gap:4px}
+.arrowPad button{height:32px}
+.spriteFileTools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.coordReadout{font-weight:bold;min-width:42px;display:inline-block}
+.off{fill:#320000}.on{fill:red}
+table{border-collapse:collapse;margin-top:10px}
+td,th{border:1px solid #aaa;padding:4px}
+input{width:90px}
+textarea{border:1px solid #aaa;padding:8px;min-height:220px;width:100%;box-sizing:border-box}
+.controls{margin:8px 0}
+</style>
+</head>
+<body>
+<h1>MAX7219 World Map Drawing Tool - 24 Digits</h1>
+
+<div class="topLayout">
+
+<div class="displayPanel">
+<div id="digitPane"></div>
+
+<div class="spriteTools">
+<div class="tableWrap">
+<table>
+<tr><th>Digit</th><th>Binary</th><th>Hex</th><th>Save Digit</th></tr>
+<tbody id="rows"></tbody>
+</table>
+</div>
+
+<div class="toolsPanel">
+<h3>Map Drawing tools</h3>
+<div id="mapPane"></div>
+<div class="spriteFileTools">
+<button onclick="save8SpritesToTXT()">Save 8sprites to TXT</button>
+<button onclick="openImport8SpritesTXT()">Import 8sprites from TXT</button>
+<input id="import8SpritesTXTFile" type="file" accept=".txt,text/plain" style="display:none" onchange="import8SpritesTXTFile(this.files[0]); this.value=''">
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="mapNavPanel">
+<canvas id="coordMap" width="390" height="875"></canvas>
+<div class="regionTools">
+<label><input type="checkbox" id="selectRegion" onchange="toggleRegionSelect()"> Select region</label>
+<label>Region name <input id="regionName" type="text" value="region1" oninput="drawCoordinateMap(); renderFrames()"></label>
+<button onclick="selectRegionSprites()">select 8sprites</button>
+<button onclick="saveRegionCoordinates()">Save region coordinates</button>
+</div>
+<div class="coordTools">
+<span class="coordReadout" id="coordReadout">A.00</span>
+<div class="arrowPad">
+<span></span><button onclick="moveCoordinate(0,1)">↑</button><span></span>
+<button onclick="moveCoordinate(-1,0)">←</button><button onclick="loadCoordinate()">Load</button><button onclick="moveCoordinate(1,0)">→</button>
+<span></span><button onclick="moveCoordinate(0,-1)">↓</button><span></span>
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="bottomLayout">
+<div class="buttonPanel">
+<label><input type="checkbox" id="addCoordinates" onchange="applyCoordinateDigits()"> ADD Coordinats</label>
+<div class="controls">
+<label><input type="checkbox" id="mirrorDigitPosition" onchange="refreshDisplay()" checked> Mirror digit position</label>
+<label><input type="checkbox" id="placeMode"> Place</label>
+<button onclick="saveFrame()">Save Frame to Coordinate</button>
+<button onclick="setDefaultSaveFolder()">Set Default Save Folder</button>
+<button onclick="saveFrameToTXT()">Save Frame to TXT</button>
+<button onclick="saveAnimationToTXT()">Save Map to TXT</button>
+<button onclick="saveCompressedWorldMapToTXT()">Save compressed data world map to TXT</button>
+<button onclick="openImportTXT()">Import TXT</button>
+<input id="importTXTFile" type="file" accept=".txt,text/plain" style="display:none" onchange="importTXTFile(this.files[0]); this.value=''">
+<button onclick="clearDisplay()">Clear</button>
+<span id="saveFolderStatus"></span>
+</div>
+</div>
+
+<div>
+<h3>Coordinate Data</h3>
+<textarea id="frames"></textarea>
+</div>
+</div>
+
+<script>
+const DIGITS=24;
+const COORD_ROWS=32;
+const MAP_KEYS=['1','2','3','4','Q','W','E','R','A','S','D','F','Z','X','C','V'];
+const EIGHT_SPRITE_KEYS=['1','2','3','4','Q','W','E','R'];
+const pane=document.getElementById('digitPane');
+const rows=document.getElementById('rows');
+const mapPane=document.getElementById('mapPane');
+const coordCanvas=document.getElementById('coordMap');
+const coordCtx=coordCanvas.getContext('2d');
+let mapData={};
+let coordX=0;
+let coordY=0;
+let heldKey='';
+let isPainting=false;
+let lastPaintedSVG=null;
+let regions={};
+let currentRegionPoints=[];
+let isDrawingRegion=false;
+let defaultSaveFolder=null;
+const SAVE_DB='max7219SaveFolder';
+const SAVE_STORE='settings';
+const SAVE_KEY='defaultFolder';
+const SEG_FONT={
+ '0':0b11111100,'1':0b01100000,'2':0b11011010,'3':0b11110010,'4':0b01100110,
+ '5':0b10110110,'6':0b10111110,'7':0b11100000,'8':0b11111110,'9':0b11110110,
+ 'A':0b11101110,'B':0b00111110,'C':0b10011100,'D':0b01111010,'E':0b10011110,
+ 'F':0b10001110,'G':0b10111100,'H':0b01101110,'I':0b01100000,'J':0b01111000,
+ 'K':0b10101110,'L':0b00011100,'M':0b10101010,'N':0b00101010,'O':0b11111100,
+ 'P':0b11001110,'Q':0b11100110,'R':0b00001010,'S':0b10110110,'T':0b00011110,
+ 'U':0b01111100,'V':0b01000110,'W':0b01010110,'X':0b00101000,'Y':0b01110110,
+ 'Z':0b11011000
+};
+
+function digitSVG(idx){
+return `<svg width="90" height="140" viewBox="2 -2 12 22" data-digit="${idx}">
+<g class="digit${idx}">
+<polygon data-seg="a" class="off" points="1,1 2,0 8,0 9,1 8,2 2,2"/>
+<polygon data-seg="b" class="off" points="9,1 10,2 10,8 9,9 8,8 8,2"/>
+<polygon data-seg="c" class="off" points="9,9 10,10 10,16 9,17 8,16 8,10"/>
+<polygon data-seg="d" class="off" points="9,17 8,18 2,18 1,17 2,16 8,16"/>
+<polygon data-seg="e" class="off" points="2,17 0,16 0,10 2,9 3,10 3,16"/>
+<polygon data-seg="f" class="off" points="2,9 0,8 0,2 2,1 3,2 3,8"/>
+<polygon data-seg="g" class="off" points="1,9 2,8 8,8 9,9 8,10 2,10"/>
+<polygon data-seg="dp" class="off" points="11,16 13,16 13,18 11,18"/>
+</g></svg>`;
+}
+
+for(let i=0;i<DIGITS;i++){
+ pane.insertAdjacentHTML('beforeend',digitSVG(i));
+ rows.insertAdjacentHTML('beforeend',
+ `<tr><td>${i}</td>
+ <td><input id="bin${i}" value="00000000" oninput="binChanged(${i})"></td>
+ <td><input id="hex${i}" value="00" oninput="hexChanged(${i})"></td>
+ <td><button onclick="saveDigitToTXT(${i})">Save Digit</button></td></tr>`);
+}
+
+for(let i=0;i<MAP_KEYS.length;i++){
+ const key=MAP_KEYS[i];
+ const gapClass=key==='Q' ? ' spriteGap' : '';
+ mapPane.insertAdjacentHTML('beforeend',
+ `<div class="mapCell${gapClass}">
+ <div class="mapLabel">${key}</div>
+ ${digitSVG('map'+key)}
+ <input class="mapBin" id="mapBin${key}" value="00000000" oninput="mapBinChanged('${key}')">
+ </div>`);
+}
+
+function displayIndex(i){
+ if(!document.getElementById('mirrorDigitPosition').checked) return i;
+ const row=Math.floor(i/8);
+ return row*8 + (7-(i%8));
+}
+
+function valueFromSVG(svg){
+ let v=0;
+ const on=s=>svg.querySelector(`[data-seg="${s}"]`).getAttribute('class')==='on';
+ if(on('a'))v|=128;if(on('b'))v|=64;if(on('c'))v|=32;if(on('d'))v|=16;
+ if(on('e'))v|=8;if(on('f'))v|=4;if(on('g'))v|=2;if(on('dp'))v|=1;
+ return v;
+}
+
+function setSVGValue(svg,v){
+ const map={a:7,b:6,c:5,d:4,e:3,f:2,g:1,dp:0};
+ for(const [s,b] of Object.entries(map)){
+   svg.querySelector(`[data-seg="${s}"]`).setAttribute('class',(v&(1<<b))?'on':'off');
+ }
+}
+
+function mapSVG(key){
+ return mapPane.querySelector(`[data-digit="map${key}"]`);
+}
+
+function mapValue(key){
+ return valueFromSVG(mapSVG(key));
+}
+
+function syncMapBin(key){
+ document.getElementById('mapBin'+key).value=mapValue(key).toString(2).padStart(8,'0');
+}
+
+function mapBinChanged(key){
+ let b=document.getElementById('mapBin'+key).value.replace(/[^01]/g,'').padStart(8,'0').slice(-8);
+ document.getElementById('mapBin'+key).value=b;
+ setSVGValue(mapSVG(key),parseInt(b,2));
+}
+
+document.addEventListener('keydown',e=>{
+ const key=e.key.toUpperCase();
+ if(MAP_KEYS.includes(key)) heldKey=key;
+});
+
+document.addEventListener('keyup',e=>{
+ if(e.key.toUpperCase()===heldKey) heldKey='';
+});
+
+document.addEventListener('keydown',e=>{
+ if(e.altKey || e.ctrlKey || e.metaKey) return;
+ switch(e.key){
+  case 'ArrowUp':
+   e.preventDefault();
+   moveCoordinate(0,1);
+   break;
+  case 'ArrowDown':
+   e.preventDefault();
+   moveCoordinate(0,-1);
+   break;
+  case 'ArrowLeft':
+   e.preventDefault();
+   moveCoordinate(-1,0);
+   break;
+  case 'ArrowRight':
+   e.preventDefault();
+   moveCoordinate(1,0);
+   break;
+ }
+});
+
+function placeStampOnMainDigit(svg){
+ if(!document.getElementById('placeMode').checked || !heldKey || !svg) return false;
+ setSVGValue(svg,mapValue(heldKey));
+ syncFromDisplay();
+ return true;
+}
+
+pane.addEventListener('mousedown',e=>{
+ if(e.button!==0) return;
+ const svg=e.target.closest('svg');
+ if(placeStampOnMainDigit(svg)){
+  isPainting=true;
+  lastPaintedSVG=svg;
+  e.preventDefault();
+ }
+});
+
+pane.addEventListener('mouseover',e=>{
+ if(!isPainting) return;
+ const svg=e.target.closest('svg');
+ if(svg && svg!==lastPaintedSVG && placeStampOnMainDigit(svg)){
+  lastPaintedSVG=svg;
+ }
+});
+
+document.addEventListener('mouseup',()=>{
+ isPainting=false;
+ lastPaintedSVG=null;
+});
+
+pane.addEventListener('click',e=>{
+ const svg=e.target.closest('svg');
+ if(placeStampOnMainDigit(svg)){
+  return;
+ }
+ if(!e.target.dataset.seg) return;
+ e.target.setAttribute('class',e.target.getAttribute('class')==='on'?'off':'on');
+ syncFromDisplay();
+});
+
+mapPane.addEventListener('click',e=>{
+ if(!e.target.dataset.seg) return;
+ e.target.setAttribute('class',e.target.getAttribute('class')==='on'?'off':'on');
+ const key=e.target.closest('.mapCell').querySelector('.mapLabel').textContent;
+ syncMapBin(key);
+});
+
+function regionSelectionEnabled(){
+ const checkbox=document.getElementById('selectRegion');
+ return checkbox && checkbox.checked;
+}
+
+function canvasPoint(e){
+ const rect=coordCanvas.getBoundingClientRect();
+ return {
+  x:(e.clientX-rect.left)*coordCanvas.width/rect.width,
+  y:(e.clientY-rect.top)*coordCanvas.height/rect.height
+ };
+}
+
+function coordinateFromCanvasPoint(point){
+ const m=coordinateMapMetrics();
+ if(point.x<m.left || point.x>m.left+m.gridW || point.y<m.top || point.y>m.top+m.gridH) return null;
+ const x=Math.floor((point.x-m.left)/m.cellW);
+ const y=Math.floor((m.top+m.gridH-point.y)/m.cellH);
+ if(x<0 || x>25 || y<0 || y>=COORD_ROWS) return null;
+ return coordinateKey(x,y);
+}
+
+function ensureRegion(name=currentRegionName()){
+ if(!regions[name]) regions[name]={points:[],coordinates:[],spriteValues:null};
+ if(!regions[name].coordinates) regions[name].coordinates=[];
+ if(!regions[name].points) regions[name].points=[];
+ return regions[name];
+}
+
+function toggleRegionCoordinate(key){
+ if(!key) return;
+ const name=currentRegionName();
+ const region=ensureRegion(name);
+ const index=region.coordinates.indexOf(key);
+ if(index>=0){
+  region.coordinates.splice(index,1);
+  setSaveFolderStatus(`Removed ${compressedCoordinateName(key)} from ${name}`);
+ }else{
+  region.coordinates.push(key);
+  region.coordinates.sort();
+  setSaveFolderStatus(`Added ${compressedCoordinateName(key)} to ${name}`);
+ }
+ drawCoordinateMap();
+ renderFrames();
+}
+
+function currentSpriteValues(){
+ return EIGHT_SPRITE_KEYS.map(key=>mapValue(key));
+}
+
+function selectRegionSprites(){
+ const name=currentRegionName();
+ const region=ensureRegion(name);
+ region.spriteValues=currentSpriteValues();
+ region.spriteKeys=EIGHT_SPRITE_KEYS.slice();
+ setSaveFolderStatus(`Selected 8 sprites for ${name}`);
+ renderFrames();
+}
+
+function toggleRegionSelect(){
+ if(!regionSelectionEnabled()) isDrawingRegion=false;
+ drawCoordinateMap();
+}
+
+coordCanvas.addEventListener('mousedown',e=>{
+ if(!regionSelectionEnabled() || e.button!==0) return;
+ if(e.shiftKey){
+  toggleRegionCoordinate(coordinateFromCanvasPoint(canvasPoint(e)));
+  e.preventDefault();
+  return;
+ }
+ currentRegionPoints=[canvasPoint(e)];
+ isDrawingRegion=true;
+ e.preventDefault();
+});
+
+coordCanvas.addEventListener('mousemove',e=>{
+ if(!isDrawingRegion) return;
+ const p=canvasPoint(e);
+ const last=currentRegionPoints[currentRegionPoints.length-1];
+ if(!last || Math.hypot(p.x-last.x,p.y-last.y)>=2){
+  currentRegionPoints.push(p);
+  drawCoordinateMap();
+ }
+});
+
+document.addEventListener('mouseup',()=>{
+ if(!isDrawingRegion) return;
+ isDrawingRegion=false;
+ const name=currentRegionName();
+ const points=currentRegionPoints.slice();
+ const coordinates=regionCoordinatesFromPoints(points);
+ const region=ensureRegion(name);
+ region.points=points;
+ region.coordinates=coordinates;
+ setSaveFolderStatus(`Region ${name}: ${coordinates.length} coordinate${coordinates.length===1?'':'s'}`);
+ drawCoordinateMap();
+ renderFrames();
+});
+
+function valueFromDigit(i){
+ const svg=pane.children[displayIndex(i)];
+ return valueFromSVG(svg);
+}
+
+function setDigit(i,v){
+ const svg=pane.children[displayIndex(i)];
+ setSVGValue(svg,v);
+}
+
+function syncFromDisplay(){
+ for(let i=0;i<DIGITS;i++){
+   let v=valueFromDigit(i);
+   document.getElementById('hex'+i).value=v.toString(16).toUpperCase().padStart(2,'0');
+   document.getElementById('bin'+i).value=v.toString(2).padStart(8,'0');
+ }
+}
+
+function binChanged(i){
+ let b=document.getElementById('bin'+i).value.replace(/[^01]/g,'').padStart(8,'0').slice(-8);
+ let v=parseInt(b,2);
+ document.getElementById('bin'+i).value=b;
+ document.getElementById('hex'+i).value=v.toString(16).toUpperCase().padStart(2,'0');
+ setDigit(i,v);
+}
+
+function hexChanged(i){
+ let h=document.getElementById('hex'+i).value.replace(/[^0-9A-Fa-f]/g,'').padStart(2,'0').slice(-2);
+ let v=parseInt(h,16);
+ document.getElementById('hex'+i).value=h.toUpperCase();
+ document.getElementById('bin'+i).value=v.toString(2).padStart(8,'0');
+ setDigit(i,v);
+}
+
+function coordinateName(){
+ return String.fromCharCode(65+coordX) + '.' + coordY.toString().padStart(2,'0');
+}
+
+function coordinateKey(x=coordX,y=coordY){
+ return String.fromCharCode(65+x) + y.toString().padStart(2,'0');
+}
+
+function currentRegionName(){
+ const input=document.getElementById('regionName');
+ return (input ? input.value.trim() : '') || 'region1';
+}
+
+function coordinateMapMetrics(){
+ const w=coordCanvas.width;
+ const h=coordCanvas.height;
+ const left=34;
+ const top=18;
+ const gridW=w-left-8;
+ const gridH=h-top-24;
+ return {w,h,left,top,gridW,gridH,cellW:gridW/26,cellH:gridH/COORD_ROWS};
+}
+
+function pointInPolygon(x,y,points){
+ let inside=false;
+ for(let i=0,j=points.length-1;i<points.length;j=i++){
+  const xi=points[i].x, yi=points[i].y;
+  const xj=points[j].x, yj=points[j].y;
+  const intersect=((yi>y)!==(yj>y)) && (x<(xj-xi)*(y-yi)/(yj-yi)+xi);
+  if(intersect) inside=!inside;
+ }
+ return inside;
+}
+
+function regionCoordinatesFromPoints(points){
+ if(points.length<3) return [];
+ const m=coordinateMapMetrics();
+ const coords=[];
+ for(let x=0;x<26;x++){
+  for(let y=0;y<COORD_ROWS;y++){
+   const cx=m.left+x*m.cellW+m.cellW/2;
+   const cy=m.top+m.gridH-(y+0.5)*m.cellH;
+   if(pointInPolygon(cx,cy,points)) coords.push(coordinateKey(x,y));
+  }
+ }
+ return coords;
+}
+
+function getRegionForExport(){
+ const name=currentRegionName();
+ const region=regions[name];
+ if(region && region.coordinates && region.coordinates.length) return {name,coordinates:region.coordinates};
+ return {name:'all_saved_coordinates',coordinates:Object.keys(mapData).sort()};
+}
+
+function regionNames(){
+ return Object.keys(regions).sort();
+}
+
+function coordinateRegionNames(key){
+ return regionNames().filter(name=>{
+  const region=regions[name];
+  return region && region.coordinates && region.coordinates.includes(key);
+ });
+}
+
+function formatSpritePalette(region){
+ if(!region || !region.spriteValues || region.spriteValues.length!==8) return 'not selected';
+ return region.spriteValues.map((v,i)=>
+  `${i.toString(2).padStart(3,'0')}=${byteHex(v)}`
+ ).join(', ');
+}
+
+function renderRegionDataTXT(){
+ const names=regionNames();
+ const lines=['/* Region data'];
+ if(!names.length){
+  lines.push('No regions selected.');
+ }else{
+  for(const name of names){
+   const region=regions[name];
+   const coords=(region.coordinates || []).slice().sort();
+   lines.push(`Region: ${name}`);
+   lines.push(`  sprites: ${formatSpritePalette(region)}`);
+   lines.push(`  coordinates (${coords.length}): ${coords.map(compressedCoordinateName).join(', ')}`);
+  }
+ }
+
+ const keys=Object.keys(mapData).sort();
+ lines.push('', 'Coordinate region map:');
+ if(!keys.length){
+  lines.push('  no saved coordinates');
+ }else{
+  for(const key of keys){
+   const namesForCoordinate=coordinateRegionNames(key);
+   lines.push(`  ${compressedCoordinateName(key)}: ${namesForCoordinate.length ? namesForCoordinate.join(', ') : 'no region'}`);
+  }
+ }
+ lines.push('*/');
+ return lines.join('\n');
+}
+
+function applyCoordinateDigits(){
+ if(document.getElementById('addCoordinates').checked){
+  const key=coordinateKey();
+  const mirrored=document.getElementById('mirrorDigitPosition').checked;
+  const positions=mirrored ? [2,1,0] : [5,6,7];
+  setDigit(positions[0],(SEG_FONT[key[0]] || 0) | 0x01);
+  setDigit(positions[1],SEG_FONT[key[1]] || 0);
+  setDigit(positions[2],SEG_FONT[key[2]] || 0);
+ }
+ syncFromDisplay();
+ drawCoordinateMap();
+}
+
+function drawCoordinateMap(){
+ const {w,h,left,top,gridW,gridH,cellW,cellH}=coordinateMapMetrics();
+ coordCtx.clearRect(0,0,w,h);
+ coordCtx.fillStyle='#d8d8d8';
+ coordCtx.fillRect(left,top,gridW,gridH);
+ coordCtx.strokeStyle='#b0b0b0';
+ coordCtx.lineWidth=1;
+ for(let x=0;x<=26;x++){
+  const px=left+x*cellW;
+  coordCtx.beginPath(); coordCtx.moveTo(px,top); coordCtx.lineTo(px,top+gridH); coordCtx.stroke();
+ }
+ for(let y=0;y<=COORD_ROWS;y+=4){
+  const py=top+gridH-y*cellH;
+  coordCtx.beginPath(); coordCtx.moveTo(left,py); coordCtx.lineTo(left+gridW,py); coordCtx.stroke();
+ }
+ coordCtx.fillStyle='#333';
+ coordCtx.font='10px Arial';
+ coordCtx.textAlign='center';
+ for(let x=0;x<26;x++) coordCtx.fillText(String.fromCharCode(65+x),left+x*cellW+cellW/2,12);
+ coordCtx.textAlign='right';
+ for(let y=0;y<COORD_ROWS;y+=4) coordCtx.fillText(y.toString().padStart(2,'0'),left-4,top+gridH-y*cellH+4);
+ drawSavedCoordinatePreviews(left,top,gridW,gridH,cellW,cellH);
+ drawSelectedRegion(left,top,gridW,gridH,cellW,cellH);
+ coordCtx.fillStyle='white';
+ coordCtx.strokeStyle='#222';
+ coordCtx.lineWidth=2;
+ const activeY=top+gridH-(coordY+1)*cellH;
+ coordCtx.fillRect(left+coordX*cellW,activeY,Math.max(3,cellW),Math.max(3,cellH));
+ coordCtx.strokeRect(left+coordX*cellW,activeY,Math.max(3,cellW),Math.max(3,cellH));
+ document.getElementById('coordReadout').textContent=coordinateName();
+}
+
+function drawMiniSegment(x,y,w,h,seg){
+ const t=Math.max(0.35,Math.min(w,h)*0.12);
+ coordCtx.beginPath();
+ if(seg==='a'){ coordCtx.rect(x+t,y,w-2*t,t); }
+ if(seg==='b'){ coordCtx.rect(x+w-t,y+t,t,h/2-t); }
+ if(seg==='c'){ coordCtx.rect(x+w-t,y+h/2,t,h/2-t); }
+ if(seg==='d'){ coordCtx.rect(x+t,y+h-t,w-2*t,t); }
+ if(seg==='e'){ coordCtx.rect(x,y+h/2,t,h/2-t); }
+ if(seg==='f'){ coordCtx.rect(x,y+t,t,h/2-t); }
+ if(seg==='g'){ coordCtx.rect(x+t,y+h/2-t/2,w-2*t,t); }
+ if(seg==='dp'){ coordCtx.arc(x+w-t/2,y+h-t/2,t*0.8,0,Math.PI*2); }
+ coordCtx.fill();
+}
+
+function drawMiniDigit(v,x,y,w,h){
+ const segs=[['a',128],['b',64],['c',32],['d',16],['e',8],['f',4],['g',2],['dp',1]];
+ for(const [seg,bit] of segs){
+  if(v&bit) drawMiniSegment(x,y,w,h,seg);
+ }
+}
+
+function drawSavedCoordinatePreviews(left,top,gridW,gridH,cellW,cellH){
+ coordCtx.save();
+ for(const [key,frame] of Object.entries(mapData)){
+  const x=key.charCodeAt(0)-65;
+  const y=parseInt(key.slice(1),10);
+  if(x<0 || x>25 || isNaN(y) || y<0 || y>=COORD_ROWS) continue;
+  const cellX=left+x*cellW;
+  const cellY=top+gridH-(y+1)*cellH;
+  const pad=Math.max(0.8,Math.min(cellW,cellH)*0.08);
+  const miniW=(cellW-pad*2)/8;
+  const miniH=(cellH-pad*2)/3;
+  coordCtx.fillStyle='black';
+  coordCtx.fillRect(cellX+pad*0.5,cellY+pad*0.5,cellW-pad,cellH-pad);
+  coordCtx.fillStyle='red';
+  for(let i=0;i<DIGITS;i++){
+   const col=i%8;
+   const row=Math.floor(i/8);
+   const sourceIndex=displayIndex(i);
+   drawMiniDigit(frame[sourceIndex]||0,cellX+pad+col*miniW,cellY+pad+row*miniH,miniW*0.86,miniH*0.86);
+  }
+ }
+ coordCtx.restore();
+}
+
+function drawRegionPath(points){
+ if(points.length<2) return;
+ coordCtx.save();
+ coordCtx.strokeStyle='#0057ff';
+ coordCtx.lineWidth=2;
+ coordCtx.beginPath();
+ coordCtx.moveTo(points[0].x,points[0].y);
+ for(let i=1;i<points.length;i++) coordCtx.lineTo(points[i].x,points[i].y);
+ if(points.length>2 && !isDrawingRegion) coordCtx.closePath();
+ coordCtx.stroke();
+ coordCtx.restore();
+}
+
+function drawSelectedRegion(left,top,gridW,gridH,cellW,cellH){
+ const name=currentRegionName();
+ const region=regions[name];
+ const coordinates=region && region.coordinates ? region.coordinates : [];
+ coordCtx.save();
+ coordCtx.fillStyle='rgba(0,87,255,0.22)';
+ coordCtx.strokeStyle='rgba(0,87,255,0.75)';
+ for(const key of coordinates){
+  const x=key.charCodeAt(0)-65;
+  const y=parseInt(key.slice(1),10);
+  if(x<0 || x>25 || isNaN(y) || y<0 || y>=COORD_ROWS) continue;
+  const cellX=left+x*cellW;
+  const cellY=top+gridH-(y+1)*cellH;
+  coordCtx.fillRect(cellX,cellY,cellW,cellH);
+  coordCtx.strokeRect(cellX,cellY,cellW,cellH);
+ }
+ coordCtx.restore();
+ drawRegionPath(isDrawingRegion ? currentRegionPoints : (region ? region.points : []));
+}
+
+function loadCoordinate(){
+ const saved=mapData[coordinateKey()];
+ if(saved){
+  for(let i=0;i<DIGITS;i++) setDigit(i,saved[i]||0);
+ }else{
+  for(let i=0;i<DIGITS;i++) setDigit(i,0);
+ }
+ applyCoordinateDigits();
+}
+
+function moveCoordinate(dx,dy){
+ saveFrame();
+ coordX=Math.max(0,Math.min(25,coordX+dx));
+ coordY=Math.max(0,Math.min(COORD_ROWS-1,coordY+dy));
+ loadCoordinate();
+}
+
+function clearDisplay(){ for(let i=0;i<DIGITS;i++) setDigit(i,0); applyCoordinateDigits(); }
+function currentFrame(){ let f=[]; for(let i=0;i<DIGITS;i++) f.push(valueFromDigit(i)); return f; }
+function saveFrame(){
+ applyCoordinateDigits();
+ mapData[coordinateKey()]=currentFrame();
+ renderFrames();
+ drawCoordinateMap();
+}
+
+function setSaveFolderStatus(text){
+ document.getElementById('saveFolderStatus').textContent=text ? ' ' + text : '';
+}
+
+function openSaveDB(){
+ return new Promise((resolve,reject)=>{
+  const req=indexedDB.open(SAVE_DB,1);
+  req.onupgradeneeded=()=>req.result.createObjectStore(SAVE_STORE);
+  req.onsuccess=()=>resolve(req.result);
+  req.onerror=()=>reject(req.error);
+ });
+}
+
+async function saveFolderHandle(handle){
+ const db=await openSaveDB();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(SAVE_STORE,'readwrite');
+  tx.objectStore(SAVE_STORE).put(handle,SAVE_KEY);
+  tx.oncomplete=()=>{ db.close(); resolve(); };
+  tx.onerror=()=>{ db.close(); reject(tx.error); };
+ });
+}
+
+async function loadFolderHandle(){
+ const db=await openSaveDB();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(SAVE_STORE,'readonly');
+  const req=tx.objectStore(SAVE_STORE).get(SAVE_KEY);
+  req.onsuccess=()=>resolve(req.result || null);
+  req.onerror=()=>reject(req.error);
+  tx.oncomplete=()=>db.close();
+ });
+}
+
+async function setDefaultSaveFolder(){
+ if(!window.showDirectoryPicker){
+  alert('Default save folder is not supported in this browser. Use Save As instead.');
+  return;
+ }
+ try{
+  defaultSaveFolder=await window.showDirectoryPicker({mode:'readwrite'});
+  await saveFolderHandle(defaultSaveFolder);
+  setSaveFolderStatus('Default save folder set');
+ }catch(err){
+  if(!err || err.name!=='AbortError') alert('Could not set default save folder.');
+ }
+}
+
+async function getWritableDefaultFolder(){
+ if(!defaultSaveFolder){
+  try{ defaultSaveFolder=await loadFolderHandle(); }catch(err){ defaultSaveFolder=null; }
+ }
+ if(!defaultSaveFolder) return null;
+ let permission=await defaultSaveFolder.queryPermission({mode:'readwrite'});
+ if(permission!=='granted'){
+  permission=await defaultSaveFolder.requestPermission({mode:'readwrite'});
+ }
+ return permission==='granted' ? defaultSaveFolder : null;
+}
+
+async function downloadTXT(filename, text){
+ const folder=await getWritableDefaultFolder();
+ if(folder){
+  try{
+   const fileHandle=await folder.getFileHandle(filename,{create:true});
+   const writable=await fileHandle.createWritable();
+   await writable.write(text);
+   await writable.close();
+   setSaveFolderStatus(`Saved to default folder: ${filename}`);
+   return;
+  }catch(err){
+   setSaveFolderStatus('Default folder failed, using Save As');
+  }
+ }
+ if(window.showSaveFilePicker){
+  try{
+   const handle=await window.showSaveFilePicker({
+    suggestedName:filename,
+    types:[{description:'Text file',accept:{'text/plain':['.txt']}}]
+   });
+   const writable=await handle.createWritable();
+   await writable.write(text);
+   await writable.close();
+   return;
+  }catch(err){
+   if(err && err.name==='AbortError') return;
+  }
+ }
+ const blob=new Blob([text],{type:'text/plain'});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');
+ a.href=url;
+ a.download=filename;
+ document.body.appendChild(a);
+ a.click();
+ a.remove();
+ URL.revokeObjectURL(url);
+}
+
+function frameToTXT(frame, label){
+ return `${label}\n` + frame.map((v,i)=>
+   `Digit ${i}: ${v.toString(2).padStart(8,'0')}  0x${v.toString(16).toUpperCase().padStart(2,'0')}`
+ ).join('\n');
+}
+
+function safeFilePart(text){
+ return text.replace(/[^A-Za-z0-9_-]+/g,'_').replace(/^_+|_+$/g,'') || 'region';
+}
+
+function saveRegionCoordinates(){
+ const name=currentRegionName();
+ const region=ensureRegion(name);
+ const coordinates=region.coordinates.slice().sort();
+ const text=[
+  `Region: ${name}`,
+  `Sprites: ${formatSpritePalette(region)}`,
+  `Coordinates (${coordinates.length}):`,
+  coordinates.map(compressedCoordinateName).join(', '),
+  ''
+ ].join('\n');
+ downloadTXT(`region_${safeFilePart(name)}_coordinates.txt`, text);
+}
+
+function saveFrameToTXT(){
+ applyCoordinateDigits();
+ downloadTXT(`tile_${coordinateKey()}.txt`, frameToTXT(currentFrame(), `Coordinate ${coordinateName()}`));
+}
+
+function saveAnimationToTXT(){
+ saveFrame();
+ downloadTXT('world_map.txt', renderMapTXT());
+}
+
+function byteHex(v){
+ return '0x' + v.toString(16).toUpperCase().padStart(2,'0');
+}
+
+function compressedCoordinateName(key){
+ return key[0] + '.' + key.slice(1);
+}
+
+function getSpriteCompressionTable(){
+ return EIGHT_SPRITE_KEYS.map((key,index)=>({
+  key,
+  index,
+  value:mapValue(key)
+ }));
+}
+
+function cString(text){
+ return text.replace(/\\/g,'\\\\').replace(/"/g,'\\"');
+}
+
+function exportRegionList(){
+ return regionNames().map(name=>({
+  name,
+  region:regions[name],
+  coordinates:(regions[name].coordinates || []).slice().sort()
+ })).filter(item=>item.coordinates.length);
+}
+
+function findInvalidSpriteFrames(assignments, exportRegions, spriteMaps){
+ const invalid=[];
+ const keys=Object.keys(mapData).sort();
+ for(const key of keys){
+  const regionIndex=assignments[key];
+  const spriteMap=spriteMaps[regionIndex];
+  const frame=mapData[key] || [];
+  for(let i=0;i<DIGITS;i++){
+   if(!spriteMap.has(frame[i] || 0)){
+    invalid.push(`${compressedCoordinateName(key)} (${exportRegions[regionIndex].name})`);
+    break;
+   }
+  }
+ }
+ return invalid;
+}
+
+function stopCompressedExport(message, items){
+ alert(message + (items && items.length ? '\n' + items.join(', ') : ''));
+ return '';
+}
+
+function renderCompressedWorldMapTXT(){
+ saveFrame();
+ const exportRegions=exportRegionList();
+ if(!exportRegions.length){
+  return stopCompressedExport('Compressed export stopped. Draw at least one named region first.');
+ }
+
+ const missingSprites=exportRegions
+  .filter(item=>!item.region.spriteValues || item.region.spriteValues.length!==8)
+  .map(item=>item.name);
+ if(missingSprites.length){
+  return stopCompressedExport('Compressed export stopped. These regions need select 8sprites:', missingSprites);
+ }
+
+ const savedKeys=Object.keys(mapData).sort();
+ const assignments={};
+ const overlaps=[];
+ exportRegions.forEach((item,regionIndex)=>{
+  for(const key of item.coordinates){
+   if(assignments[key]!==undefined){
+    overlaps.push(compressedCoordinateName(key));
+   }else{
+    assignments[key]=regionIndex;
+   }
+  }
+ });
+ if(overlaps.length){
+  return stopCompressedExport('Compressed export stopped. These coordinates are in more than one region:', overlaps);
+ }
+
+ const unassigned=savedKeys.filter(key=>assignments[key]===undefined);
+ if(unassigned.length){
+  return stopCompressedExport('Compressed export stopped. These saved coordinates have no region:', unassigned.map(compressedCoordinateName));
+ }
+
+ const spriteMaps=exportRegions.map(item=>{
+  const m=new Map();
+  item.region.spriteValues.forEach((value,index)=>{
+   if(!m.has(value)) m.set(value,index);
+  });
+  return m;
+ });
+
+ const invalid=findInvalidSpriteFrames(assignments,exportRegions,spriteMaps);
+ if(invalid.length){
+  return stopCompressedExport('Compressed export stopped. These frames contain digit data outside their region sprites:', invalid);
+ }
+
+ const regionFrames=exportRegions.map(item=>item.coordinates.filter(key=>mapData[key]).sort());
+ let firstFrame=0;
+ const regionMeta=regionFrames.map(keys=>{
+  const meta={firstFrame,frameCount:keys.length};
+  firstFrame+=keys.length;
+  return meta;
+ });
+
+ const lines=[
+  '// Compressed World Map',
+  '// Byte format for each of the 24 digits: bits 7-3 = digit/frame address (0-23), bits 2-0 = region sprite address (0-7).',
+  '// A frame is 24 bytes. A region owns exactly 8 sprite bytes, so each digit in that region stores only a 3-bit sprite address.',
+  '',
+  'struct CompressedRegion {',
+  '  const char* name;',
+  '  uint8_t sprites[8];',
+  '  uint16_t firstFrame;',
+  '  uint16_t frameCount;',
+  '};',
+  '',
+  'struct CompressedFrame {',
+  '  char x;',
+  '  uint8_t y;',
+  '  uint8_t region;',
+  '  uint8_t digits[24];',
+  '};',
+  '',
+  'const CompressedRegion compressedRegions[] = {'
+ ];
+ exportRegions.forEach((item,regionIndex)=>{
+  const meta=regionMeta[regionIndex];
+  const sprites=item.region.spriteValues.map(byteHex).join(', ');
+  const coords=item.coordinates.map(compressedCoordinateName).join(', ');
+  lines.push(`  { "${cString(item.name)}", { ${sprites} }, ${meta.firstFrame}, ${meta.frameCount} }, // region ${regionIndex}, coordinates: ${coords}`);
+ });
+
+ lines.push(
+  '};',
+  '',
+  'const CompressedFrame compressedWorldMap[] = {'
+ );
+
+ exportRegions.forEach((item,regionIndex)=>{
+  for(const key of regionFrames[regionIndex]){
+   const frame=mapData[key] || [];
+   const spriteMap=spriteMaps[regionIndex];
+   const bytes=[];
+   for(let i=0;i<DIGITS;i++){
+    const spriteIndex=spriteMap.get(frame[i] || 0);
+    bytes.push((i<<3) | spriteIndex);
+   }
+   lines.push(`  { '${key[0]}', ${parseInt(key.slice(1),10)}, ${regionIndex}, { ${bytes.map(byteHex).join(', ')} } }, // ${compressedCoordinateName(key)} ${item.name}`);
+  }
+ });
+
+ lines.push(
+  '};',
+  '',
+  `const uint8_t compressedRegionCount = ${exportRegions.length};`,
+  `const uint16_t compressedFrameCount = ${firstFrame};`
+ );
+ return lines.join('\n') + '\n';
+}
+
+function saveCompressedWorldMapToTXT(){
+ const txt=renderCompressedWorldMapTXT();
+ if(txt) downloadTXT('world_map_compressed.txt', txt);
+}
+
+function saveDigitToTXT(i){
+ const v=valueFromDigit(i);
+ downloadTXT(`digit_${i}.txt`, v.toString(2).padStart(8,'0') + '\n');
+}
+
+function save8SpritesToTXT(){
+ const lines=['8 Sprites 1 2 3 4 Q W E R'];
+ for(const key of EIGHT_SPRITE_KEYS){
+  const v=mapValue(key);
+  lines.push(`Sprite ${key}: ${v.toString(2).padStart(8,'0')}  0x${v.toString(16).toUpperCase().padStart(2,'0')}`);
+ }
+ downloadTXT('8sprites_1234_qwer.txt', lines.join('\n') + '\n');
+}
+
+function openImport8SpritesTXT(){
+ document.getElementById('import8SpritesTXTFile').click();
+}
+
+function parse8SpritesTXT(txt){
+ const values={};
+ const explicit=/Sprite\s+([1234QWER])\s*:\s*([01]{8})(?:\s+0x[0-9A-Fa-f]{1,2})?/gi;
+ let match;
+ while((match=explicit.exec(txt))){
+  values[match[1].toUpperCase()]=parseInt(match[2],2);
+ }
+ if(Object.keys(values).length) return values;
+
+ const binaries=txt.match(/[01]{8}/g) || [];
+ EIGHT_SPRITE_KEYS.forEach((key,i)=>{
+  if(binaries[i]) values[key]=parseInt(binaries[i],2);
+ });
+ return values;
+}
+
+async function import8SpritesTXTFile(file){
+ if(!file) return;
+ const txt=await file.text();
+ const values=parse8SpritesTXT(txt);
+ let imported=0;
+ for(const key of EIGHT_SPRITE_KEYS){
+  if(Object.prototype.hasOwnProperty.call(values,key)){
+   setSVGValue(mapSVG(key),values[key]);
+   syncMapBin(key);
+   imported++;
+  }
+ }
+ if(imported){
+  setSaveFolderStatus(`Imported ${imported} sprite${imported===1?'':'s'} to 1 2 3 4 Q W E R`);
+ }else{
+  alert('Could not find 8-sprite data in this TXT file.');
+ }
+}
+
+function openImportTXT(){
+ document.getElementById('importTXTFile').click();
+}
+
+function parseSavedTXTFrames(txt){
+ const frames=[];
+ let current=null;
+ const lines=txt.split(/\r?\n/);
+ for(const line of lines){
+  const frameMatch=line.match(/^\s*Frame\s+(\d+)/i);
+  if(frameMatch){
+   if(current) frames.push(current);
+   current=new Array(DIGITS).fill(0);
+   continue;
+  }
+  const digitMatch=line.match(/Digit\s+(\d+)\s*:\s*([01]{8})(?:\s+0x[0-9A-Fa-f]{1,2})?/i);
+  if(digitMatch){
+   if(!current) current=new Array(DIGITS).fill(0);
+   const digit=parseInt(digitMatch[1],10);
+   if(digit>=0 && digit<DIGITS) current[digit]=parseInt(digitMatch[2],2);
+  }
+ }
+ if(current) frames.push(current);
+ return frames;
+}
+
+async function importTXTFile(file){
+ if(!file) return;
+ const txt=await file.text();
+ document.getElementById('frames').value=txt;
+ parseFrames();
+ if(Object.keys(mapData).length){
+  renderFrames();
+  loadCoordinate();
+  setSaveFolderStatus(`Imported ${Object.keys(mapData).length} map tile${Object.keys(mapData).length===1?'':'s'}`);
+  return;
+ }
+
+ const savedFrames=parseSavedTXTFrames(txt);
+ if(savedFrames.length){
+  mapData[coordinateKey()]=savedFrames[0];
+  renderFrames();
+  loadCoordinate();
+  setSaveFolderStatus(`Imported frame to ${coordinateName()}`);
+  return;
+ }
+
+ const trimmed=txt.trim();
+ if(/^[01]{8}$/.test(trimmed)){
+  let digitMatch=file.name.match(/digit[_ -]?(\d+)/i);
+  let digit=digitMatch ? parseInt(digitMatch[1],10) : NaN;
+  if(isNaN(digit) || digit<0 || digit>=DIGITS){
+   const answer=prompt('Import this digit to which digit number? (0-23)','0');
+   digit=parseInt(answer,10);
+  }
+  if(digit>=0 && digit<DIGITS){
+   setDigit(digit,parseInt(trimmed,2));
+   syncFromDisplay();
+   setSaveFolderStatus(`Imported digit ${digit}`);
+  }
+  return;
+ }
+
+ alert('Could not find coordinate map, frame, or digit data in this TXT file.');
+}
+
+function frameBytes(frame){
+ return frame.map(v=>'0x'+v.toString(16).toUpperCase().padStart(2,'0')).join(', ');
+}
+
+function renderMapTXT(){
+ const keys=Object.keys(mapData).sort();
+ return `struct MapTile {\n  char x;\n  uint8_t y;\n  uint8_t digits[24];\n};\n\nconst MapTile worldMap[] = {\n` +
+ keys.map(k=>`  { '${k[0]}', ${parseInt(k.slice(1),10)}, { ${frameBytes(mapData[k])} } }, // ${k}`).join('\n') +
+ `\n};\n\nconst uint16_t worldMapCount = ${keys.length};\n`;
+}
+
+function renderFrames(){
+ document.getElementById('frames').value=renderRegionDataTXT() + '\n\n' + renderMapTXT();
+}
+
+function parseFrames(){
+ const txt=document.getElementById('frames').value;
+ mapData={};
+ const re=/\{\s*'([A-Z])'\s*,\s*(\d{1,2})\s*,\s*\{([^}]*)\}\s*\}/g;
+ let m;
+ while((m=re.exec(txt))){
+  const key=m[1] + parseInt(m[2],10).toString().padStart(2,'0');
+  mapData[key]=m[3].split(',').map(x=>parseInt(x.trim(),0)).filter(v=>!isNaN(v)).slice(0,DIGITS);
+ }
+}
+
+function showFrame(idx){
+ parseFrames();
+ loadCoordinate();
+}
+
+function replaceStep(){
+ saveFrame();
+}
+
+function insertStep(){
+ saveFrame();
+}
+
+function stepForward(){ moveCoordinate(1,0); }
+function stepBackward(){ moveCoordinate(-1,0); }
+function stopAnim(){}
+
+async function playAnim(){
+ loadCoordinate();
+}
+
+function refreshDisplay(){
+ for(let i=0;i<DIGITS;i++){
+   let v=parseInt(document.getElementById('hex'+i).value||'0',16)||0;
+   setDigit(i,v);
+ }
+}
+
+async function initSaveFolder(){
+ if(!window.showDirectoryPicker){
+  setSaveFolderStatus('Default folder not supported');
+  return;
+ }
+ try{
+  defaultSaveFolder=await loadFolderHandle();
+  if(defaultSaveFolder) setSaveFolderStatus('Default save folder remembered');
+ }catch(err){
+  defaultSaveFolder=null;
+ }
+}
+
+function initArrowLabels(){
+ const buttons=document.querySelectorAll('.arrowPad button');
+ if(buttons.length>=5){
+  buttons[0].textContent='↑';
+  buttons[1].textContent='←';
+  buttons[2].textContent='Load';
+  buttons[3].textContent='→';
+  buttons[4].textContent='↓';
+ }
+}
+
+initArrowLabels();
+syncFromDisplay();
+drawCoordinateMap();
+initSaveFolder();
+</script>
+</body>
+</html>

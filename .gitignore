@@ -1,0 +1,29 @@
+# Generated Arduino exports
+Arduino_Tests/
+**/Arduino_Tests/
+
+# Local saved projects and private evidence
+Saved_json/
+**/Saved_json/
+*.project.local.json
+*EVIDENCE*.json
+
+# Backups made during development
+backups/
+old/
+*.backup_*
+*.bak_*
+Documentation/*.backup_*
+Documentation/*.bak_*
+Prompts/*.backup_*
+Prompts/*.bak_*
+
+# Local browser/system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.log

@@ -1,0 +1,2061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monster Design Tool - DIGI-boy</title>
+<style>
+:root{
+  --bg:#0b0e13;
+  --panel:#121821;
+  --panel2:#18212c;
+  --line:#293646;
+  --text:#e7edf4;
+  --muted:#8291a5;
+  --red:#ff4d45;
+  --red2:#9b2727;
+  --gold:#f0b94a;
+  --green:#60d394;
+  --blue:#65a9ff;
+  --shadow:0 18px 45px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  color:var(--text);
+  background:
+    radial-gradient(circle at 8% -10%,rgba(255,77,69,.13),transparent 32rem),
+    radial-gradient(circle at 100% 20%,rgba(101,169,255,.08),transparent 30rem),
+    var(--bg);
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.appHeader{
+  position:sticky;
+  top:0;
+  z-index:30;
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  align-items:center;
+  padding:15px 22px;
+  border-bottom:1px solid var(--line);
+  background:rgba(11,14,19,.94);
+  backdrop-filter:blur(14px);
+}
+.brand{display:flex;align-items:center;gap:13px;min-width:0}
+.brandMark{
+  width:43px;height:43px;display:grid;place-items:center;
+  border:1px solid var(--red2);border-radius:10px;
+  color:var(--red);background:#1b1114;font-weight:900;letter-spacing:-2px;
+  box-shadow:inset 0 0 18px rgba(255,77,69,.08);
+}
+.brand h1{font-size:18px;margin:0;letter-spacing:.08em;text-transform:uppercase}
+.brand p{margin:3px 0 0;color:var(--muted);font-size:12px}
+.headerActions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.btn{
+  border:1px solid var(--line);
+  color:var(--text);
+  background:var(--panel2);
+  border-radius:8px;
+  padding:9px 12px;
+  transition:.15s ease;
+}
+.btn:hover{border-color:#53677e;transform:translateY(-1px)}
+.btn.primary{background:var(--red);border-color:var(--red);color:#160707;font-weight:800}
+.btn.ghost{background:transparent}
+.btn.danger{color:#ff9b96;border-color:#6c3030}
+.btn.small{padding:6px 9px;font-size:12px}
+.workspace{display:grid;grid-template-columns:225px minmax(0,1fr);min-height:calc(100vh - 74px)}
+.sideNav{
+  position:sticky;top:74px;height:calc(100vh - 74px);overflow:auto;
+  padding:20px 14px;border-right:1px solid var(--line);background:rgba(13,17,23,.65)
+}
+.sideNav a{
+  display:flex;justify-content:space-between;align-items:center;
+  color:var(--muted);text-decoration:none;padding:10px 11px;border-radius:7px;
+  margin-bottom:4px;font-size:13px;font-weight:700;
+}
+.sideNav a:hover{color:var(--text);background:var(--panel2)}
+.sideNav .navLabel{margin:16px 10px 8px;color:#526174;font-size:10px;letter-spacing:.16em;text-transform:uppercase}
+.sideStatus{margin-top:22px;padding:12px;border:1px solid var(--line);border-radius:9px;background:var(--panel)}
+.sideStatus strong{display:block;font-size:12px;margin-bottom:7px}
+.meter{height:5px;background:#242d38;border-radius:10px;overflow:hidden}
+.meter span{display:block;width:0;height:100%;background:var(--green);transition:width .2s}
+#completionText{color:var(--muted);font-size:11px;margin-top:7px}
+main{min-width:0;padding:24px;max-width:1600px;width:100%;margin:0 auto}
+.hero{
+  display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,.6fr);gap:16px;margin-bottom:20px
+}
+.heroCard,.summaryCard,.section{
+  border:1px solid var(--line);border-radius:12px;background:linear-gradient(145deg,var(--panel),#10161e);
+  box-shadow:var(--shadow);
+}
+.heroCard{padding:22px}
+.eyebrow{color:var(--red);text-transform:uppercase;font-size:11px;font-weight:900;letter-spacing:.18em}
+.heroTitle{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.heroTitle input{
+  flex:1 1 280px;min-width:0;width:100%;font-size:30px;font-weight:850;letter-spacing:-.03em;
+  color:var(--text);border:0;border-bottom:1px solid transparent;background:transparent;padding:3px 0
+}
+.heroTitle input:focus{outline:0;border-color:var(--red)}
+.nameActions{display:flex;gap:7px;flex:0 0 auto}
+.nameActions .btn{white-space:nowrap}
+.heroMeta{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+.chip{padding:6px 9px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:11px;background:#0d1218}
+.summaryCard{padding:18px;display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+.summaryStat{padding:10px;border-radius:8px;background:#0c1117;border:1px solid #222d39}
+.summaryStat span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.12em}
+.summaryStat strong{display:block;margin-top:6px;font-family:Consolas,monospace;font-size:20px;color:var(--gold)}
+.section{padding:20px;margin-bottom:18px;scroll-margin-top:94px}
+.sectionHead{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:17px}
+.sectionHead h2{font-size:16px;margin:0;text-transform:uppercase;letter-spacing:.1em}
+.sectionHead p{margin:5px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
+.sectionTag{flex:0 0 auto;color:var(--muted);font-family:Consolas,monospace;font-size:11px;border:1px solid var(--line);border-radius:6px;padding:5px 7px}
+.grid{display:grid;gap:13px}
+.cols2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cols3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.cols4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.cols6{grid-template-columns:repeat(6,minmax(0,1fr))}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field.wide{grid-column:1/-1}
+.field label,.groupLabel{color:#aeb9c7;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.hint{font-size:10px;color:#657386;font-weight:500;text-transform:none;letter-spacing:0}
+.rangeHint{color:#718196;font-size:10px;font-family:Consolas,monospace}
+.battleActions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+input,select,textarea{
+  width:100%;min-width:0;color:var(--text);background:#0b1016;border:1px solid var(--line);
+  border-radius:7px;padding:9px 10px;outline:none
+}
+input:focus,select:focus,textarea:focus{border-color:var(--red);box-shadow:0 0 0 2px rgba(255,77,69,.1)}
+input[type="checkbox"]{width:auto;accent-color:var(--red)}
+textarea{resize:vertical;min-height:100px;line-height:1.45}
+.subPanel{padding:15px;border:1px solid #263240;background:#0e141c;border-radius:9px}
+.subPanel h3{margin:0 0 13px;font-size:12px;color:var(--gold);text-transform:uppercase;letter-spacing:.1em}
+.formulaStrip{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px
+}
+.formula{
+  padding:12px;border:1px solid var(--line);border-radius:8px;background:#090d12
+}
+.formula span{color:var(--muted);font-size:10px;text-transform:uppercase}
+.formula strong{display:block;margin:5px 0 3px;color:var(--green);font-size:19px}
+.formula code{color:#68778a;font-size:10px;white-space:normal}
+.dropTable{width:100%;border-collapse:separate;border-spacing:0 7px}
+.dropTable th{text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.09em;padding:0 6px}
+.dropTable td{padding:0 4px}
+.dropTable input,.dropTable select{padding:8px}
+.dropTable .checkCell{text-align:center}
+.dropTable .removeCell{width:44px}
+.emptyState{padding:22px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:8px}
+.animationShell{display:grid;grid-template-columns:245px minmax(0,1fr);gap:16px}
+.statePanel{border-right:1px solid var(--line);padding-right:15px}
+.statePanel h3,.editorPanel h3{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin:0 0 11px}
+.stateGrid{display:grid;gap:7px}
+.stateCard{
+  position:relative;width:100%;text-align:left;padding:11px 12px;border:1px solid var(--line);
+  background:#0c1219;color:var(--text);border-radius:8px
+}
+.stateCard:hover{border-color:#4c6077}
+.stateCard.active{border-color:var(--red);background:linear-gradient(90deg,rgba(255,77,69,.15),#101720)}
+.stateCard strong{display:block;font-size:12px}
+.stateCard span{display:block;color:var(--muted);font-size:10px;margin-top:4px}
+.stateCard b{
+  position:absolute;right:10px;top:10px;min-width:24px;padding:3px 6px;text-align:center;
+  color:var(--gold);background:#1d1b13;border:1px solid #4d4022;border-radius:999px;font-size:10px
+}
+.editorPanel{min-width:0}
+.animTopbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.animTitle h3{font-size:17px;color:var(--text);letter-spacing:.03em;text-transform:none;margin:0}
+.animTitle p{margin:4px 0 0;color:var(--muted);font-size:11px}
+.animOptions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sizeChoices{
+  display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;border:1px solid var(--line);
+  border-radius:8px;background:#0a0f15
+}
+.sizeChoices strong{width:100%;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.1em}
+.sizeChoice{display:flex;align-items:center;gap:5px;color:#aeb9c7;font-size:11px;white-space:nowrap}
+.inlineCheck{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:11px}
+.inlineNumber{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px}
+.inlineNumber input{width:76px;padding:6px 7px}
+.displayArea{
+  overflow:auto;padding:13px;background:#05070a;border:1px solid #252f3a;border-radius:10px;
+  box-shadow:inset 0 0 35px rgba(255,0,0,.035)
+}
+#digitPane{
+  display:grid;grid-template-columns:repeat(8,minmax(42px,1fr));gap:5px;min-width:420px;max-width:780px;margin:0 auto
+}
+.digitSvg{display:block;width:100%;height:auto;max-height:112px}
+.digitSvg.digitHidden{display:none}
+.segOff{fill:#2f0909;stroke:#4a1111;stroke-width:.08}
+.segOn{fill:var(--red);stroke:#ff766f;stroke-width:.08;filter:drop-shadow(0 0 2px rgba(255,50,45,.65))}
+.digitSvg polygon{cursor:pointer;transition:fill .08s}
+.digitSvg:hover{background:rgba(255,255,255,.015)}
+.frameControls{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}
+.timelineWrap{border:1px solid var(--line);border-radius:9px;background:#0a0f15;padding:10px}
+.timelineHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.timelineHead strong{font-size:11px;text-transform:uppercase;letter-spacing:.1em}
+.timelineHead span{color:var(--muted);font-size:10px}
+#timeline{display:flex;gap:7px;overflow:auto;min-height:57px;padding-bottom:3px}
+.frameChip{
+  flex:0 0 70px;min-height:50px;border:1px solid var(--line);border-radius:7px;background:#121923;color:var(--text);padding:6px
+}
+.frameChip.active{border-color:var(--gold);box-shadow:0 0 0 1px rgba(240,185,74,.25)}
+.frameChip.dragging{opacity:.35}
+.frameChip.dragTarget{border-color:var(--blue);box-shadow:0 0 0 1px rgba(101,169,255,.3)}
+.frameChip strong{display:block;color:var(--gold);font-size:10px}
+.frameChip code{display:block;color:#7f8da0;font-size:8px;margin-top:5px;overflow:hidden;white-space:nowrap}
+.digitData{margin-top:12px}
+.digitData summary,.rawData summary{
+  cursor:pointer;color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em
+}
+.digitTableWrap{overflow:auto;max-height:330px;margin-top:10px;border:1px solid var(--line);border-radius:8px}
+.digitTable{width:100%;border-collapse:collapse;font-family:Consolas,monospace;font-size:11px}
+.digitTable th{position:sticky;top:0;background:#17202b;color:#93a0b1;text-align:left}
+.digitTable td,.digitTable th{border-bottom:1px solid #222d39;padding:6px}
+.digitTable input{padding:5px 7px;font-family:inherit}
+.rawData{margin-top:12px}
+.rawData textarea{margin-top:9px;min-height:145px;font-family:Consolas,monospace;font-size:11px}
+.statusBar{
+  position:fixed;right:18px;bottom:16px;z-index:40;max-width:420px;
+  color:#c8d4df;background:#18232d;border:1px solid #35485a;border-radius:8px;
+  padding:10px 13px;font-size:11px;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);
+  pointer-events:none;transition:.2s ease
+}
+.statusBar.show{opacity:1;transform:translateY(0)}
+.statusBar.error{border-color:#7a3333;color:#ffaaa5}
+.srOnly{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:1050px){
+  .workspace{grid-template-columns:1fr}.sideNav{display:none}
+  .animationShell{grid-template-columns:1fr}.statePanel{border-right:0;border-bottom:1px solid var(--line);padding:0 0 15px}
+  .stateGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  .appHeader{position:relative;align-items:flex-start}.headerActions{justify-content:flex-start}
+  .workspace{min-height:0}main{padding:14px}
+  .hero{grid-template-columns:1fr}.cols2,.cols3,.cols4,.cols6{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .formulaStrip{grid-template-columns:1fr}.stateGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dropTable{min-width:820px}.dropTableWrap{overflow:auto}
+}
+@media(max-width:500px){
+  .appHeader{display:block}.headerActions{margin-top:12px}
+  .cols2,.cols3,.cols4,.cols6{grid-template-columns:1fr}
+  .summaryCard{grid-template-columns:repeat(2,1fr)}.stateGrid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header class="appHeader">
+  <div class="brand">
+    <div class="brandMark">M20</div>
+    <div>
+      <h1>Monster Design Tool</h1>
+      <p>Battle data, loot and compact animation states</p>
+    </div>
+  </div>
+  <div class="headerActions">
+    <button class="btn ghost" type="button" id="newMonsterButton">New</button>
+    <button class="btn" type="button" id="importButton">Import JSON</button>
+    <button class="btn primary" type="button" id="exportButton">Export Monster</button>
+    <input class="srOnly" id="importFile" type="file" accept=".json,application/json">
+  </div>
+</header>
+
+<div class="workspace">
+  <nav class="sideNav" aria-label="Monster design sections">
+    <div class="navLabel">Design Sheet</div>
+    <a href="#identity">Identity <span>01</span></a>
+    <a href="#stats">Battle Numbers <span>02</span></a>
+    <a href="#drops">Drops <span>03</span></a>
+    <a href="#animations">Animations <span>04</span></a>
+    <div class="sideStatus">
+      <strong>Sheet completion</strong>
+      <div class="meter"><span id="completionMeter"></span></div>
+      <div id="completionText">0% complete</div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="hero">
+      <div class="heroCard">
+        <div class="eyebrow">Current monster</div>
+        <div class="heroTitle">
+          <input id="heroName" aria-label="Monster name" data-field="identity.name" value="New Monster">
+          <div class="nameActions">
+            <button class="btn small" type="button" id="randomNameButton">Random</button>
+            <button class="btn small" type="button" id="randomMixNameButton">Random Mix</button>
+          </div>
+        </div>
+        <div class="heroMeta">
+          <span class="chip" id="heroId">ID: MON_001</span>
+          <span class="chip" id="heroLevel">Level 1</span>
+          <span class="chip" id="heroAnimCount">0 animation frames</span>
+        </div>
+      </div>
+      <div class="summaryCard">
+        <div class="summaryStat"><span>HP</span><strong id="summaryHp">10</strong></div>
+        <div class="summaryStat"><span>Attack</span><strong id="summaryAttack">4</strong></div>
+        <div class="summaryStat"><span>Defense</span><strong id="summaryDefense">2</strong></div>
+        <div class="summaryStat"><span>Speed</span><strong id="summarySpeed">3</strong></div>
+        <div class="summaryStat"><span>XP</span><strong id="summaryXp">5</strong></div>
+      </div>
+    </div>
+
+    <section class="section" id="identity">
+      <div class="sectionHead">
+        <div><h2>Identity</h2><p>The monster ID and the name shown in the game.</p></div>
+        <span class="sectionTag">IDENTITY</span>
+      </div>
+      <div class="grid cols2">
+        <div class="field"><label for="monsterId">Monster ID</label><input id="monsterId" data-field="identity.id" value="MON_001"></div>
+        <div class="field"><label for="monsterName">Display name</label><input id="monsterName" data-field="identity.name" value="New Monster"></div>
+      </div>
+    </section>
+
+    <section class="section" id="stats">
+      <div class="sectionHead">
+        <div><h2>Battle Numbers</h2><p>Only the numbers needed for health, damage, turn order and experience.</p></div>
+        <div class="battleActions">
+          <span class="sectionTag">LEVEL 1-99</span>
+          <button class="btn primary small" type="button" id="randomizeAllButton">Randomize All</button>
+        </div>
+      </div>
+      <div class="grid cols4">
+        <div class="field"><label>Level</label><input id="monsterLevel" type="number" min="1" max="99" data-field="stats.level" value="1"><span class="rangeHint">Controls the ranges below</span></div>
+        <div class="field"><label>Current HP</label><input type="number" min="0" max="999" data-field="stats.currentHP" value="12"></div>
+        <div class="field"><label>Max HP</label><input type="number" min="1" max="999" data-field="stats.maxHP" value="12"><span class="rangeHint" id="maxHPRange"></span></div>
+        <div class="field"><label>Attack power</label><input type="number" min="0" max="255" data-field="stats.attackPower" value="4"><span class="rangeHint" id="attackPowerRange"></span></div>
+        <div class="field"><label>Magic power</label><input type="number" min="0" max="255" data-field="stats.magicPower" value="0"><span class="rangeHint" id="magicPowerRange"></span></div>
+        <div class="field"><label>Defense</label><input type="number" min="0" max="255" data-field="stats.defense" value="3"><span class="rangeHint" id="defenseRange"></span></div>
+        <div class="field"><label>Magic defense</label><input type="number" min="0" max="255" data-field="stats.magicDefense" value="0"><span class="rangeHint" id="magicDefenseRange"></span></div>
+        <div class="field"><label>Accuracy %</label><input type="number" min="0" max="100" data-field="stats.accuracy" value="70"><span class="rangeHint" id="accuracyRange"></span></div>
+        <div class="field"><label>Evasion %</label><input type="number" min="0" max="100" data-field="stats.evasion" value="3"><span class="rangeHint" id="evasionRange"></span></div>
+        <div class="field"><label>Critical %</label><input type="number" min="0" max="100" data-field="stats.criticalChance" value="3"><span class="rangeHint" id="criticalChanceRange"></span></div>
+        <div class="field"><label>Physical resistance %</label><input type="number" min="0" max="200" data-field="stats.resistancePhysical" value="100"></div>
+        <div class="field"><label>Magic resistance %</label><input type="number" min="0" max="200" data-field="stats.resistanceMagic" value="100"></div>
+        <div class="field"><label>Weapon power</label><input type="number" min="0" max="255" data-field="stats.weaponPower" value="0"></div>
+        <div class="field"><label>Spell power</label><input type="number" min="0" max="255" data-field="stats.spellPower" value="0"></div>
+        <div class="field"><label>Speed</label><input type="number" min="0" max="255" data-field="stats.speed" value="3"><span class="rangeHint" id="speedRange"></span></div>
+        <div class="field"><label>XP given when killed</label><input type="number" min="0" max="65535" data-field="stats.xpReward" value="6"><span class="rangeHint" id="xpRewardRange"></span></div>
+      </div>
+    </section>
+
+    <section class="section" id="drops">
+      <div class="sectionHead">
+        <div><h2>Drops</h2><p>Item name and chance to drop when the monster is killed.</p></div>
+        <button class="btn small" type="button" id="addDropButton">Add drop</button>
+      </div>
+      <div class="dropTableWrap">
+        <table class="dropTable" id="dropTable">
+          <thead><tr><th>Item</th><th>Chance %</th><th></th></tr></thead>
+          <tbody id="dropRows"></tbody>
+        </table>
+      </div>
+      <div class="emptyState" id="dropEmpty">No drops added yet.</div>
+    </section>
+
+    <section class="section" id="animations">
+      <div class="sectionHead">
+        <div><h2>3 Animations</h2><p>Click segments to autosave the selected frame. Drag frames to reorder; use Ctrl+C, Ctrl+X and Ctrl+V.</p></div>
+        <span class="sectionTag" id="sizeByteTag">1 BYTE / FRAME</span>
+      </div>
+      <div class="animationShell">
+        <aside class="statePanel">
+          <h3>State / action slots</h3>
+          <div class="stateGrid" id="stateGrid"></div>
+        </aside>
+        <div class="editorPanel">
+          <div class="animTopbar">
+            <div class="animTitle"><h3 id="currentStateTitle">Idle</h3><p id="currentStateDescription">Default breathing or waiting loop.</p></div>
+            <div class="animOptions">
+              <div class="sizeChoices" id="sizeChoices">
+                <strong>Monster display size</strong>
+                <label class="sizeChoice"><input type="checkbox" data-monster-size="normal" checked> Normal 1×1</label>
+                <label class="sizeChoice"><input type="checkbox" data-monster-size="large"> Large 2×1</label>
+                <label class="sizeChoice"><input type="checkbox" data-monster-size="tall"> Tall 1×2</label>
+                <label class="sizeChoice"><input type="checkbox" data-monster-size="miniBoss"> Mini Boss 2×2</label>
+                <label class="sizeChoice"><input type="checkbox" data-monster-size="boss"> Boss 4×2</label>
+              </div>
+              <label class="inlineNumber">Frame ms <input id="frameDuration" type="number" min="20" max="5000" step="10" value="140"></label>
+              <label class="inlineCheck"><input type="checkbox" id="loopAnimation" checked> Loop state</label>
+              <label class="inlineCheck"><input type="checkbox" id="mirrorDigitPosition"> Mirror digit positions</label>
+            </div>
+          </div>
+
+          <div class="displayArea"><div id="digitPane" aria-label="24 digit seven segment editor"></div></div>
+
+          <div class="frameControls">
+            <button class="btn primary small" type="button" id="saveFrameButton">Add frame</button>
+            <button class="btn small" type="button" id="insertFrameButton">Insert before</button>
+            <button class="btn small" type="button" id="duplicateFrameButton">Duplicate</button>
+            <button class="btn danger small" type="button" id="deleteFrameButton">Delete</button>
+            <button class="btn small" type="button" id="previousFrameButton">Previous</button>
+            <button class="btn small" type="button" id="nextFrameButton">Next</button>
+            <button class="btn small" type="button" id="playButton">Play</button>
+            <button class="btn small" type="button" id="stopButton">Stop</button>
+            <button class="btn ghost small" type="button" id="clearDisplayButton">Clear display</button>
+          </div>
+
+          <div class="timelineWrap">
+            <div class="timelineHead"><strong>Frames</strong><span id="timelineStatus">No frames saved</span></div>
+            <div id="timeline"></div>
+          </div>
+
+          <details class="digitData">
+            <summary>Binary and hex digit data</summary>
+            <div class="digitTableWrap">
+              <table class="digitTable">
+                <thead><tr><th>Digit</th><th>Binary</th><th>Hex</th></tr></thead>
+                <tbody id="digitRows"></tbody>
+              </table>
+            </div>
+          </details>
+
+          <details class="rawData">
+            <summary>Raw animation frame data</summary>
+            <textarea id="rawFrames" spellcheck="false" aria-label="Raw animation frame data"></textarea>
+            <button class="btn small" type="button" id="applyRawButton">Apply raw data to this state</button>
+          </details>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="statusBar" id="statusBar" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+
+var DIGITS=24;
+var STORAGE_KEY="digiboy_monster_designer_v1";
+var stateDefinitions=[
+  {id:"idle",name:"Normal (Idle)",description:"Normal battle pose and idle loop.",loop:true},
+  {id:"attack",name:"Attack / Cast",description:"Used whenever the monster attacks or casts.",loop:false},
+  {id:"hit",name:"Get Hit",description:"Reaction when the monster takes damage.",loop:false}
+];
+var monsterNames=`Zarok
+Groth
+Nargol
+Karth
+Braug
+Sarlok
+Drain
+Goluk
+Tarkul
+Ragotha
+Cindra
+Ulgar
+Pyra
+Krage
+Dust
+Famgor
+Braug
+Tegul
+Raskor
+Gorath
+Skal
+Luth
+Drake
+soril
+Hargul
+Tuskar
+Nethra
+Kargul
+Guklok
+Pyrgul
+Runar
+Grogar
+garik
+Cairuk
+Zulgar
+Brakor
+Haskul
+Dragor
+Korlug
+Ragdar
+Gharik
+Tarsik
+Nolgar
+Kadrul
+Sargul
+Dralik
+Horath
+Kirgul
+Tarrok
+Gralor
+Lrgh
+Bgul
+Ragr
+Rath
+Guln
+Kror
+Flur
+Ghast
+Lark
+gorn
+Narlok
+Gratha
+Dargul
+Korlug
+Sarith
+Drakul
+Pyrlok
+Harlik
+Garoth
+Tarlug
+Kradar
+Zulrik
+Grolik
+Nethor
+Targul
+Bratha
+Korzin
+Darlok
+Grulak
+Sarrok
+Kairul
+Tharok
+Hargor
+Pyrdar
+Garlik
+Dranor
+Kragul
+Lorath
+Zulrok
+Targor
+Grulik
+Harzin
+Korath
+Dargor
+Sarzul
+Pyrzin
+Kralok
+Garzul
+Thargul
+Narrok
+Mornak
+Vargul
+Xorath
+Wyrlok
+Marduk
+Vexlar
+Xarnik
+Morvok
+Vuldar
+Xargul
+Wyrath
+Mordra
+Varkul
+Xorvik
+Murgath
+Vexgor
+Xuldra
+Warlok
+Morzin
+Vargor
+Xarnok
+Mulgar
+Vuldok
+Xarvik
+Wyrgul
+Morlak
+Vornax
+Xargor
+Murvik
+Vexrok
+Gral
+Zorn
+Ulak
+Brak
+Dreg
+Narg
+Crok
+Huld
+NSkel
+Ghud
+Warg
+Kelp
+Rusk
+Toad
+Boar
+Fang
+Rukh
+Bile
+NGorb
+Nbite
+Darl
+saalt
+Orkaa
+DJolt
+Pyroo
+Icier
+Lich
+Goul
+NWisp
+Bogr
+Uruk
+Brin
+Clak
+Drak
+Tarn
+Gant
+Rott
+Slug
+NSlor
+Krag
+Barl
+Nibb
+Horn
+Rill
+Snak
+Kobr
+Zobi
+Hiss
+NRasp
+Gnas
+Puck
+Brud
+Gald
+Ogrn
+Gulk
+Ragn
+Dusk
+Bane
+NCind
+Flak
+Pyro
+Icep
+Bolt
+Raze
+Drol
+Foul
+Grub
+Kril
+NJaws
+Scor
+Naga
+Slit
+Claw
+Roil
+Grit
+Zulk
+Bror
+Kurn
+NRurk
+Orel
+Snor
+Dart
+Baal
+Zeal
+Fira
+Grog
+Hagr
+Tusk
+NPion
+NKold
+NSaur
+NGaol
+NRind
+NBort
+NJark
+NLoar
+NPurg
+NDrub
+NNGash
+Zirr
+Morn
+Varg
+Xorn
+Vulk
+Malk
+Xiri
+Vesh
+Mogg
+NXaba
+Voro
+Mazu
+Xeld
+Vint
+Muro
+Xain
+Vrax
+Mivl
+Xomp
+NVexi
+Morx
+Xuum
+Vamb
+Mavk
+Xyro
+Voxl
+Murn
+Xelk
+Voda
+NMixo
+Xrag
+Zarq
+Uldo
+Brak
+Gred
+Noru
+Cral
+Huld
+Keth
+NBogr
+Rusk
+Tarl
+Zalt
+Jura
+Pyra
+Icir
+Gulo
+Bile
+Gorb
+NDarl
+Orka
+Kelp
+Rufa
+Fang
+Toad
+Boar
+Clak
+Brin
+Krag
+NBarl
+Gant
+Tarn
+Rott
+Slug
+Slor
+Kril
+Grub
+Nibb
+Horn
+NRill
+Kobr
+Snak
+Zobi
+Hiss
+Rasp
+Gnas
+Puck
+Brud
+Gald
+NGulk
+Ragn
+Dusk
+Bane
+Cind
+Flak
+Pyro
+Icep
+Bolt
+Raze
+NDrol
+Foul
+Jark
+Loar
+Purg
+Gash
+Zirr
+Kurn
+Rurk
+Orel
+NDart
+Baal
+Zeal
+Grog
+Hagr
+Tusk
+Kold
+Saur
+Gaol
+Rind
+NBort
+C uGh
+LrGh
+Gul
+Zed u
+BBit
+Ur Gh
+CyaGh
+Skal
+Rok
+NZul
+NBoo
+NKik
+NGrr
+NAkk
+NRag
+NZit
+NGak
+NLolGh
+NRul
+NNGot
+NBite
+Morn
+Vrak
+Xulu
+Wex
+Mivra
+Xylo
+Vexu
+Mra
+NWyrd
+Xo Gh
+Vapz
+Mx U
+U x
+WGh
+Mooch
+Vorz
+Xint
+Murk
+NWisq
+Xava
+Vrum
+Mbit
+XoXo
+Vng
+Wolr
+Mgl
+XC
+V u l
+NMord
+Wyxor
+Fenrir
+Jermungandr
+Níðheggr
+Garmr
+Skell
+Hati
+Fáfnir
+Sleipnir
+Gullinbursti
+Ratatoskur
+Hræsvelgur
+Eikþyrnir
+Auðhumla
+Hafgúfa
+Lyngbakur
+Jermunuxi
+Nykur
+Lindormur
+Dreki
+Ormur
+Úlfur
+Bjern
+Hrafn
+Valkyrja
+Norn
+Dís
+Fylgja
+Vættur
+Landvættur
+Álfur
+Ljósálfur
+Dekkálfur
+Dvergur
+Jetunn
+Hrímþurs
+Trell
+Bergbúi
+Draugur
+Mara
+Helhundur
+Geri
+Freki
+Huginn
+Muninn
+Veðrfelnir
+Arvakur
+Alsviður
+Skinfaxi
+Hrímfaxi
+Svaðilfari
+Gulltoppur
+Blóðughófi
+Odin
+Þór
+Týr
+Baldur
+Heimdallur
+Bragi
+Víðarr
+Váli
+Ullur
+Forseti
+Njerður
+Freyr
+Freyja
+Loki
+Hel
+Skaði
+Ægir
+Rán
+Kvasir
+Surtr
+Ymir
+Angrboða
+Bestla
+Þjazi
+Hrungnir
+Geirreður
+Beli
+Gymir
+Gerður
+Narfi
+Nari
+Sigyn
+Hyrrokkin
+Sinmara
+Móðguður
+Gullveig
+Andvari
+Reginn
+Ótr
+Sigurður
+Brynhildur
+Guðrún
+Velsungur
+Ragnar
+Herver
+Starkaður
+Helgi
+Haddingur
+Fenrir
+Jormungandr
+Midgardsormen
+Nidhogg
+Garm
+Skoll
+Hate
+Fafnir
+Sleipnir
+Gullinbursti
+Ratatosk
+Hresvelg
+Eiktyrnir
+Audhumla
+Hafgufa
+Lyngbakr
+Krakjen
+Lindorm
+Drage
+Orm
+Ulv
+Bjorn
+Huggorm
+Huldra
+Nokken
+Draug
+Mare
+Vetter
+Alv
+Svartalv
+Dverg
+Jotun
+Rimtusse
+Troll
+Bergtroll
+Sjoroll
+Fjelltroll
+Tusse
+Vetal
+Valkyrje
+Norn
+Dis
+Fylgje
+Vardog
+Helhund
+Geri
+Freki
+Huginn
+Muninn
+Vedrfolnir
+Arvakr
+Alsvidr
+Falhofnir
+Gladr
+Glaer
+Blodughofi
+Gulltopp
+Svadilfare
+Skinfakse
+Rimfakse
+Balder
+Odin
+Tor
+Tyr
+Frøy
+Frøya
+Heimdall
+Vidar
+Vale
+Brage
+Ull
+Forsete
+Njord
+Loke
+Sigurd
+Ragnar
+Volsung
+Helge
+Starkad
+Hadding
+Hervor
+Brynhild
+Gudrun
+Angrboda
+Skade
+Ran
+Aegir
+Kvasir
+Surtr
+Ymir
+Beli
+Thjasse
+Hrungne
+Geirrød
+Bestla
+Narve
+Vali
+Modgunn
+Sinmara
+Gullveig
+Fenrir
+Jormungandr
+Sleipnir
+Nidhogg
+Garmr
+Hati
+Skoll
+Fafnir
+Gullinbursti
+Ratatoskr
+Hræsvelgr
+Eikthyrnir
+Dain
+Dvalin
+Duneyr
+Durathror
+Audhumla
+Lyngbakr
+Hafgufa
+Kraken
+Lindworm
+Draugr
+Troll
+Jotunn
+Mare
+Valkyrie
+Helhound
+Sea Serpent
+Fire Drake
+Frost Giant
+Cerberus
+Chimera
+Hydra
+Echidna
+Typhon
+Orthrus
+Sphinx
+Nemean Lion
+Ladon
+Pegasus
+Minotaur
+Harpy
+Gorgon
+Medusa
+Scylla
+Charybdis
+Cyclops
+Griffin
+Manticore
+Satyr
+Centaur
+Hippocamp
+Hippogriff
+Lamia
+Empousa
+Basilisk
+Dryad
+Naiad
+Nereid
+Siren
+Pytho
+Caucasian Eagle
+Crommyonian Sow
+Teumessian Fox
+Stymphalian Bird
+Ceryneian Hind
+Calydonian Boar
+Khalkotauroi
+Colchian Dragon
+Cetus
+Amphisbaena
+Karkinos
+Eurynomos
+Ophiotaurus
+Onocentaur
+Ichthyocentaur
+Telchine
+Gigantes
+Erinys
+Arachne
+Drakon
+Python
+Arimaspian Griffin
+Golden Ram
+Bronze Talos
+Alectryon Bird
+Hecatoncheir
+Cacus
+Hippalectryon
+Kerkopes
+Odontotyrannos
+Mormo
+Keres
+Asterion
+Campe
+Delphyne
+Gello
+Graeae
+Enceladus
+Alcyoneus`.split(/\r?\n/).map(function(name){return name.trim().replace(/\s+/g," ");}).filter(Boolean);
+var defaultMonster={
+  identity:{id:"MON_001",name:"New Monster"},
+  stats:{
+    level:1,currentHP:12,maxHP:12,attackPower:4,magicPower:0,defense:3,magicDefense:0,
+    accuracy:70,evasion:3,criticalChance:3,resistancePhysical:100,resistanceMagic:100,
+    weaponPower:0,spellPower:0,speed:3,xpReward:6
+  },
+  size:"normal",
+  drops:[]
+};
+var sizeDefinitions={
+  normal:{label:"Normal",width:1,height:1,indices:[0]},
+  large:{label:"Large",width:2,height:1,indices:[0,1]},
+  tall:{label:"Tall",width:1,height:2,indices:[0,8]},
+  miniBoss:{label:"Mini Boss",width:2,height:2,indices:[0,1,8,9]},
+  boss:{label:"Boss",width:4,height:2,indices:[0,1,2,3,8,9,10,11]}
+};
+var monster=deepClone(defaultMonster);
+var animations=createDefaultAnimations();
+var currentStateId="idle";
+var currentFrameIndex=-1;
+var stopPlayback=false;
+var saveTimer=null;
+var statusTimer=null;
+var levelGrowthTimer=null;
+var frameClipboard=null;
+var draggedFrameIndex=-1;
+
+var pane=document.getElementById("digitPane");
+var digitRows=document.getElementById("digitRows");
+var stateGrid=document.getElementById("stateGrid");
+var timeline=document.getElementById("timeline");
+var rawFrames=document.getElementById("rawFrames");
+
+function deepClone(value){return JSON.parse(JSON.stringify(value));}
+
+function createDefaultAnimations(){
+  var result={};
+  stateDefinitions.forEach(function(def){
+    result[def.id]={frames:[],frameDuration:140,loop:def.loop};
+  });
+  return result;
+}
+
+function mergeDeep(target,source){
+  if(!source || typeof source!=="object") return target;
+  Object.keys(source).forEach(function(key){
+    if(source[key] && typeof source[key]==="object" && !Array.isArray(source[key])){
+      if(!target[key] || typeof target[key]!=="object") target[key]={};
+      mergeDeep(target[key],source[key]);
+    }else{
+      target[key]=source[key];
+    }
+  });
+  return target;
+}
+
+function getPath(object,path){
+  return path.split(".").reduce(function(value,key){return value==null?undefined:value[key];},object);
+}
+
+function setPath(object,path,value){
+  var keys=path.split(".");
+  var cursor=object;
+  keys.slice(0,-1).forEach(function(key){
+    if(!cursor[key] || typeof cursor[key]!=="object") cursor[key]={};
+    cursor=cursor[key];
+  });
+  cursor[keys[keys.length-1]]=value;
+}
+
+function inputValue(input){
+  if(input.type==="checkbox") return input.checked;
+  if(input.type==="number") return input.value===""?0:Number(input.value);
+  return input.value;
+}
+
+function setInputValue(input,value){
+  if(input.type==="checkbox") input.checked=Boolean(value);
+  else input.value=value==null?"":value;
+}
+
+function currentSize(){
+  return sizeDefinitions[monster.size]||sizeDefinitions.normal;
+}
+
+function compactToFull(frame,size){
+  var full=new Array(DIGITS).fill(0);
+  var definition=sizeDefinitions[size]||sizeDefinitions.normal;
+  if(Array.isArray(frame) && frame.length>DIGITS/2){
+    return frame.slice(0,DIGITS).map(clampByte).concat(new Array(Math.max(0,DIGITS-frame.length)).fill(0)).slice(0,DIGITS);
+  }
+  definition.indices.forEach(function(index,position){
+    full[index]=clampByte(frame && frame[position]);
+  });
+  return full;
+}
+
+function fullToCompact(frame,size){
+  var definition=sizeDefinitions[size]||sizeDefinitions.normal;
+  return definition.indices.map(function(index){return clampByte(frame[index]);});
+}
+
+function updateSizeDisplay(){
+  var definition=currentSize();
+  Array.from(document.querySelectorAll("[data-monster-size]")).forEach(function(input){
+    input.checked=input.dataset.monsterSize===monster.size;
+  });
+  for(var index=0;index<DIGITS;index+=1){
+    var active=definition.indices.indexOf(index)!==-1;
+    pane.children[index].classList.toggle("digitHidden",!active);
+    var row=document.getElementById("bin"+index).closest("tr");
+    if(row) row.style.display=active?"":"none";
+  }
+  pane.style.gridTemplateColumns="repeat("+definition.width+", minmax(70px, 95px))";
+  pane.style.minWidth="0";
+  pane.style.maxWidth=(definition.width*100)+"px";
+  var displayArea=pane.closest(".displayArea");
+  displayArea.style.width="min(100%, "+(definition.width*105+28)+"px)";
+  displayArea.style.margin="0 auto";
+  document.getElementById("sizeByteTag").textContent=definition.indices.length+" BYTE"+(definition.indices.length===1?"":"S")+" / FRAME";
+}
+
+function changeMonsterSize(newSize){
+  if(!sizeDefinitions[newSize] || newSize===monster.size){updateSizeDisplay();return;}
+  var oldSize=monster.size;
+  Object.keys(animations).forEach(function(stateId){
+    animations[stateId].frames=animations[stateId].frames.map(function(frame){
+      return fullToCompact(compactToFull(frame,oldSize),newSize);
+    });
+  });
+  monster.size=newSize;
+  currentFrameIndex=-1;
+  updateSizeDisplay();
+  if(animations[currentStateId].frames.length) showFrame(0); else clearDisplay();
+  animationChanged(sizeDefinitions[newSize].label+" size selected: "+sizeDefinitions[newSize].indices.length+" bytes per frame");
+}
+
+function digitSVG(index){
+  return '<svg class="digitSvg" viewBox="-1 -1 14 20" data-digit="'+index+'" role="img" aria-label="Digit '+index+'">'+
+    '<polygon data-seg="a" class="segOff" points="1,1 2,0 8,0 9,1 8,2 2,2"/>'+
+    '<polygon data-seg="b" class="segOff" points="9,1 10,2 10,8 9,9 8,8 8,2"/>'+
+    '<polygon data-seg="c" class="segOff" points="9,9 10,10 10,16 9,17 8,16 8,10"/>'+
+    '<polygon data-seg="d" class="segOff" points="9,17 8,18 2,18 1,17 2,16 8,16"/>'+
+    '<polygon data-seg="e" class="segOff" points="2,17 0,16 0,10 2,9 3,10 3,16"/>'+
+    '<polygon data-seg="f" class="segOff" points="2,9 0,8 0,2 2,1 3,2 3,8"/>'+
+    '<polygon data-seg="g" class="segOff" points="1,9 2,8 8,8 9,9 8,10 2,10"/>'+
+    '<polygon data-seg="dp" class="segOff" points="11,16 13,16 13,18 11,18"/>'+
+  '</svg>';
+}
+
+function buildAnimator(){
+  var digitHtml="";
+  var rowHtml="";
+  for(var i=0;i<DIGITS;i+=1){
+    digitHtml+=digitSVG(i);
+    rowHtml+='<tr><td>'+i+'</td><td><input id="bin'+i+'" value="00000000" maxlength="8" aria-label="Digit '+i+' binary"></td><td><input id="hex'+i+'" value="00" maxlength="2" aria-label="Digit '+i+' hex"></td></tr>';
+  }
+  pane.innerHTML=digitHtml;
+  digitRows.innerHTML=rowHtml;
+
+  pane.addEventListener("click",function(event){
+    var segment=event.target.closest("[data-seg]");
+    if(!segment) return;
+    segment.setAttribute("class",segment.getAttribute("class")==="segOn"?"segOff":"segOn");
+    syncFromDisplay();
+    saveEditedFrame();
+  });
+
+  for(var d=0;d<DIGITS;d+=1){
+    (function(index){
+      document.getElementById("bin"+index).addEventListener("input",function(){binaryChanged(index);});
+      document.getElementById("hex"+index).addEventListener("input",function(){hexChanged(index);});
+    })(d);
+  }
+}
+
+function displayIndex(index){
+  if(!document.getElementById("mirrorDigitPosition").checked) return index;
+  var row=Math.floor(index/8);
+  var column=index%8;
+  var definition=currentSize();
+  if(row<definition.height && column<definition.width){
+    return row*8+(definition.width-1-column);
+  }
+  return index;
+}
+
+function valueFromDigit(index){
+  var svg=pane.children[displayIndex(index)];
+  var value=0;
+  function on(segment){return svg.querySelector('[data-seg="'+segment+'"]').getAttribute("class")==="segOn";}
+  if(on("g")) value|=1;
+  if(on("f")) value|=2;
+  if(on("e")) value|=4;
+  if(on("d")) value|=8;
+  if(on("c")) value|=16;
+  if(on("b")) value|=32;
+  if(on("a")) value|=64;
+  if(on("dp")) value|=128;
+  return value;
+}
+
+function setDigit(index,value){
+  var map={g:0,f:1,e:2,d:3,c:4,b:5,a:6,dp:7};
+  var svg=pane.children[displayIndex(index)];
+  Object.keys(map).forEach(function(segment){
+    svg.querySelector('[data-seg="'+segment+'"]').setAttribute("class",(value&(1<<map[segment]))?"segOn":"segOff");
+  });
+}
+
+function syncFromDisplay(){
+  for(var i=0;i<DIGITS;i+=1){
+    var value=valueFromDigit(i);
+    document.getElementById("hex"+i).value=value.toString(16).toUpperCase().padStart(2,"0");
+    document.getElementById("bin"+i).value=value.toString(2).padStart(8,"0");
+  }
+}
+
+function binaryChanged(index){
+  var input=document.getElementById("bin"+index);
+  var binary=input.value.replace(/[^01]/g,"").padStart(8,"0").slice(-8);
+  var value=parseInt(binary,2);
+  input.value=binary;
+  document.getElementById("hex"+index).value=value.toString(16).toUpperCase().padStart(2,"0");
+  setDigit(index,value);
+  saveEditedFrame();
+}
+
+function hexChanged(index){
+  var input=document.getElementById("hex"+index);
+  var hex=input.value.replace(/[^0-9a-f]/gi,"").padStart(2,"0").slice(-2);
+  var value=parseInt(hex,16);
+  input.value=hex.toUpperCase();
+  document.getElementById("bin"+index).value=value.toString(2).padStart(8,"0");
+  setDigit(index,value);
+  saveEditedFrame();
+}
+
+function captureFrame(){
+  return currentSize().indices.map(function(index){return valueFromDigit(index);});
+}
+
+function clearDisplay(){
+  for(var i=0;i<DIGITS;i+=1) setDigit(i,0);
+  syncFromDisplay();
+}
+
+function clearDisplayAndSave(){
+  clearDisplay();
+  saveEditedFrame();
+}
+
+function showFrame(index){
+  var frames=animations[currentStateId].frames;
+  if(!frames.length){currentFrameIndex=-1;clearDisplay();renderTimeline();return;}
+  currentFrameIndex=Math.max(0,Math.min(index,frames.length-1));
+  var full=compactToFull(frames[currentFrameIndex],monster.size);
+  for(var i=0;i<DIGITS;i+=1) setDigit(i,full[i]);
+  syncFromDisplay();
+  renderTimeline();
+}
+
+function saveFrame(){
+  var frames=animations[currentStateId].frames;
+  frames.push(captureFrame());
+  currentFrameIndex=frames.length-1;
+  animationChanged("Frame added");
+}
+
+function saveEditedFrame(){
+  var frames=animations[currentStateId].frames;
+  if(currentFrameIndex<0 || !frames.length){
+    frames.push(captureFrame());
+    currentFrameIndex=0;
+  }else{
+    frames[currentFrameIndex]=captureFrame();
+  }
+  animationChanged();
+}
+
+function copySelectedFrame(){
+  var frames=animations[currentStateId].frames;
+  if(currentFrameIndex<0 || !frames.length){
+    showStatus("Select a frame to copy",true);
+    return false;
+  }
+  frameClipboard=frames[currentFrameIndex].slice();
+  showStatus("Frame copied");
+  return true;
+}
+
+function cutSelectedFrame(){
+  if(!copySelectedFrame()) return;
+  deleteFrame();
+  showStatus("Frame cut");
+}
+
+function pasteFrame(){
+  if(!frameClipboard){
+    showStatus("No copied frame to paste",true);
+    return;
+  }
+  var frames=animations[currentStateId].frames;
+  var pasted=frameClipboard.slice(0,currentSize().indices.length);
+  while(pasted.length<currentSize().indices.length) pasted.push(0);
+  var insertAt=currentFrameIndex<0?frames.length:currentFrameIndex+1;
+  frames.splice(insertAt,0,pasted);
+  currentFrameIndex=insertAt;
+  showFrame(currentFrameIndex);
+  animationChanged("Frame pasted");
+}
+
+function moveFrame(fromIndex,toIndex){
+  var frames=animations[currentStateId].frames;
+  if(fromIndex<0 || toIndex<0 || fromIndex>=frames.length || toIndex>=frames.length || fromIndex===toIndex) return;
+  var moved=frames.splice(fromIndex,1)[0];
+  frames.splice(toIndex,0,moved);
+  currentFrameIndex=toIndex;
+  showFrame(currentFrameIndex);
+  animationChanged("Frame order changed");
+}
+
+function handleFrameShortcuts(event){
+  if(!(event.ctrlKey || event.metaKey) || event.altKey) return;
+  var target=event.target;
+  if(target && (target.matches("input, textarea, select") || target.isContentEditable)) return;
+  var key=event.key.toLowerCase();
+  if(key==="c"){
+    event.preventDefault();
+    copySelectedFrame();
+  }else if(key==="x"){
+    event.preventDefault();
+    cutSelectedFrame();
+  }else if(key==="v"){
+    event.preventDefault();
+    pasteFrame();
+  }
+}
+
+function insertFrame(){
+  var frames=animations[currentStateId].frames;
+  var index=currentFrameIndex<0?0:currentFrameIndex;
+  frames.splice(index,0,captureFrame());
+  currentFrameIndex=index;
+  animationChanged("Frame inserted");
+}
+
+function duplicateFrame(){
+  var frames=animations[currentStateId].frames;
+  if(currentFrameIndex<0 || !frames.length){showStatus("Select or add a frame first",true);return;}
+  frames.splice(currentFrameIndex+1,0,frames[currentFrameIndex].slice());
+  currentFrameIndex+=1;
+  animationChanged("Frame duplicated");
+}
+
+function deleteFrame(){
+  var frames=animations[currentStateId].frames;
+  if(currentFrameIndex<0 || !frames.length) return;
+  frames.splice(currentFrameIndex,1);
+  if(!frames.length){currentFrameIndex=-1;clearDisplay();}
+  else showFrame(Math.min(currentFrameIndex,frames.length-1));
+  animationChanged("Frame deleted");
+}
+
+function animationChanged(message){
+  renderStateCards();
+  renderTimeline();
+  renderRawFrames();
+  updateSummary();
+  queueSave();
+  if(message) showStatus(message);
+}
+
+function renderStateCards(){
+  stateGrid.innerHTML="";
+  stateDefinitions.forEach(function(def){
+    var state=animations[def.id];
+    var button=document.createElement("button");
+    button.type="button";
+    button.className="stateCard"+(def.id===currentStateId?" active":"");
+    button.dataset.state=def.id;
+    var title=document.createElement("strong");
+    title.textContent=def.name;
+    var description=document.createElement("span");
+    description.textContent=def.description;
+    var count=document.createElement("b");
+    count.textContent=state.frames.length;
+    button.appendChild(title);
+    button.appendChild(description);
+    button.appendChild(count);
+    stateGrid.appendChild(button);
+  });
+}
+
+function selectState(id){
+  if(!animations[id]) return;
+  stopPlayback=true;
+  currentStateId=id;
+  currentFrameIndex=-1;
+  var def=stateDefinitions.filter(function(item){return item.id===id;})[0];
+  document.getElementById("currentStateTitle").textContent=def.name;
+  document.getElementById("currentStateDescription").textContent=def.description;
+  document.getElementById("frameDuration").value=animations[id].frameDuration;
+  document.getElementById("loopAnimation").checked=animations[id].loop;
+  renderStateCards();
+  renderRawFrames();
+  if(animations[id].frames.length) showFrame(0);
+  else{clearDisplay();renderTimeline();}
+}
+
+function renderTimeline(){
+  var frames=animations[currentStateId].frames;
+  timeline.innerHTML="";
+  var bytes=currentSize().indices.length;
+  document.getElementById("timelineStatus").textContent=(frames.length?frames.length+" frame"+(frames.length===1?"":"s")+" saved":"No frames saved")+" · "+bytes+" byte"+(bytes===1?"":"s")+" per frame";
+  frames.forEach(function(frame,index){
+    var button=document.createElement("button");
+    button.type="button";
+    button.draggable=true;
+    button.className="frameChip"+(index===currentFrameIndex?" active":"");
+    button.dataset.frameIndex=index;
+    var label=document.createElement("strong");
+    label.textContent="FRAME "+String(index+1).padStart(2,"0");
+    var sample=document.createElement("code");
+    sample.textContent=frame.slice(0,5).map(hexByte).join(" ")+"...";
+    button.appendChild(label);
+    button.appendChild(sample);
+    button.addEventListener("click",function(){showFrame(index);});
+    button.addEventListener("dragstart",function(event){
+      draggedFrameIndex=index;
+      button.classList.add("dragging");
+      event.dataTransfer.effectAllowed="move";
+      event.dataTransfer.setData("text/plain",String(index));
+    });
+    button.addEventListener("dragover",function(event){
+      event.preventDefault();
+      event.dataTransfer.dropEffect="move";
+      button.classList.add("dragTarget");
+    });
+    button.addEventListener("dragleave",function(){
+      button.classList.remove("dragTarget");
+    });
+    button.addEventListener("drop",function(event){
+      event.preventDefault();
+      button.classList.remove("dragTarget");
+      var from=draggedFrameIndex;
+      if(from<0) from=Number(event.dataTransfer.getData("text/plain"));
+      moveFrame(from,index);
+    });
+    button.addEventListener("dragend",function(){
+      draggedFrameIndex=-1;
+      Array.from(timeline.querySelectorAll(".frameChip")).forEach(function(chip){
+        chip.classList.remove("dragging","dragTarget");
+      });
+    });
+    timeline.appendChild(button);
+  });
+}
+
+function renderRawFrames(){
+  rawFrames.value=animations[currentStateId].frames.map(function(frame,index){
+    return "{ "+frame.map(function(value){return "0x"+hexByte(value);}).join(", ")+" }, // Frame "+index;
+  }).join("\n");
+}
+
+function applyRawFrames(){
+  var byteCount=currentSize().indices.length;
+  var matches=Array.from(rawFrames.value.matchAll(/\{([^}]*)\}/g));
+  var parsed=matches.map(function(match){
+    var values=match[1].split(",").map(function(item){return parseInt(item.trim(),0);}).filter(function(value){return !isNaN(value);}).slice(0,byteCount);
+    while(values.length<byteCount) values.push(0);
+    return values.map(clampByte);
+  });
+  animations[currentStateId].frames=parsed;
+  currentFrameIndex=parsed.length?0:-1;
+  if(parsed.length) showFrame(0); else clearDisplay();
+  animationChanged(parsed.length+" frame"+(parsed.length===1?"":"s")+" applied");
+}
+
+function hexByte(value){return clampByte(value).toString(16).toUpperCase().padStart(2,"0");}
+function clampByte(value){return Math.max(0,Math.min(255,Number(value)||0));}
+
+async function playAnimation(){
+  var state=animations[currentStateId];
+  if(!state.frames.length){showStatus("This animation state has no frames yet",true);return;}
+  stopPlayback=false;
+  do{
+    for(var i=0;i<state.frames.length;i+=1){
+      if(stopPlayback) return;
+      showFrame(i);
+      await new Promise(function(resolve){setTimeout(resolve,Math.max(20,Number(state.frameDuration)||140));});
+    }
+  }while(state.loop && !stopPlayback);
+}
+
+function refreshMirror(){
+  var values=[];
+  for(var i=0;i<DIGITS;i+=1) values.push(parseInt(document.getElementById("hex"+i).value||"0",16)||0);
+  for(var d=0;d<DIGITS;d+=1) setDigit(d,values[d]);
+  syncFromDisplay();
+}
+
+function addDrop(drop){
+  monster.drops.push(Object.assign({item:"",chance:10},drop||{}));
+  renderDrops();
+  queueSave();
+}
+
+function renderDrops(){
+  var body=document.getElementById("dropRows");
+  body.innerHTML="";
+  document.getElementById("dropEmpty").style.display=monster.drops.length?"none":"block";
+  document.getElementById("dropTable").style.display=monster.drops.length?"table":"none";
+  monster.drops.forEach(function(drop,index){
+    var row=document.createElement("tr");
+    row.innerHTML=
+      '<td><input data-drop-field="item" aria-label="Drop item"></td>'+
+      '<td><input data-drop-field="chance" type="number" min="0" max="100" step="0.01" aria-label="Drop chance"></td>'+
+      '<td class="removeCell"><button class="btn danger small" data-remove-drop="'+index+'" type="button" aria-label="Remove drop">X</button></td>';
+    Array.from(row.querySelectorAll("[data-drop-field]")).forEach(function(input){
+      var field=input.dataset.dropField;
+      setInputValue(input,drop[field]);
+      input.addEventListener("input",function(){
+        monster.drops[index][field]=inputValue(input);
+        queueSave();
+      });
+      input.addEventListener("change",function(){
+        monster.drops[index][field]=inputValue(input);
+        queueSave();
+      });
+    });
+    body.appendChild(row);
+  });
+}
+
+function removeDrop(index){
+  monster.drops.splice(index,1);
+  renderDrops();
+  queueSave();
+}
+
+function bindFields(){
+  Array.from(document.querySelectorAll("[data-field]")).forEach(function(input){
+    input.addEventListener("input",function(){
+      setPath(monster,input.dataset.field,inputValue(input));
+      if(input.dataset.field==="stats.level"){
+        clearTimeout(levelGrowthTimer);
+        levelGrowthTimer=setTimeout(function(){applyLevelGrowth(false);},350);
+      }
+      syncTwinNameFields(input);
+      updateSummary();
+      queueSave();
+    });
+    input.addEventListener("change",function(){
+      setPath(monster,input.dataset.field,inputValue(input));
+      if(input.dataset.field==="stats.level"){
+        clearTimeout(levelGrowthTimer);
+        applyLevelGrowth(false);
+      }
+      updateSummary();
+      queueSave();
+    });
+  });
+}
+
+function syncTwinNameFields(source){
+  if(source.dataset.field!=="identity.name") return;
+  Array.from(document.querySelectorAll('[data-field="identity.name"]')).forEach(function(input){
+    if(input!==source) input.value=source.value;
+  });
+}
+
+function nameLetters(name){
+  return Array.from(name).filter(function(character){
+    return character.toLocaleUpperCase()!==character.toLocaleLowerCase();
+  }).join("");
+}
+
+function randomEntry(entries){
+  return entries[Math.floor(Math.random()*entries.length)];
+}
+
+function applyGeneratedName(name,message){
+  var clean=Array.from(String(name).trim().replace(/\s+/g," ")).slice(0,7).join("");
+  monster.identity.name=clean;
+  Array.from(document.querySelectorAll('[data-field="identity.name"]')).forEach(function(input){
+    input.value=clean;
+  });
+  updateSummary();
+  queueSave();
+  showStatus(message+": "+clean);
+}
+
+function generateRandomName(){
+  applyGeneratedName(randomEntry(monsterNames),"Random name");
+}
+
+function generateRandomMixName(){
+  var firstChoices=monsterNames.filter(function(name){return Array.from(nameLetters(name)).length>=3;});
+  var secondChoices=monsterNames.filter(function(name){return Array.from(nameLetters(name)).length>=2;});
+  var first=randomEntry(firstChoices);
+  var second=randomEntry(secondChoices);
+  while(second===first) second=randomEntry(secondChoices);
+  var mixed=Array.from(nameLetters(first)).slice(0,3).join("")+
+    Array.from(nameLetters(second)).slice(0,2).join("");
+  var characters=Array.from(mixed.toLocaleLowerCase());
+  if(characters.length) characters[0]=characters[0].toLocaleUpperCase();
+  applyGeneratedName(characters.join(""),"Mixed name");
+}
+
+function populateFields(){
+  Array.from(document.querySelectorAll("[data-field]")).forEach(function(input){
+    setInputValue(input,getPath(monster,input.dataset.field));
+  });
+}
+
+function numberAt(path,fallback){
+  var value=Number(getPath(monster,path));
+  return isFinite(value)?value:(fallback||0);
+}
+
+function firstNumberAt(object,paths,fallback){
+  for(var i=0;i<paths.length;i+=1){
+    var value=Number(getPath(object,paths[i]));
+    if(isFinite(value)) return value;
+  }
+  return fallback;
+}
+
+function clampLevel(level){
+  return Math.max(1,Math.min(99,Math.round(Number(level)||1)));
+}
+
+function battleRanges(level){
+  level=clampLevel(level);
+  return {
+    maxHP:{min:Math.min(999,Math.round(6+level*5+Math.pow(level,1.35)*1.2)),max:Math.min(999,Math.round(14+level*11+Math.pow(level,1.45)*2.1))},
+    attackPower:{min:Math.round(2+level*1.1),max:Math.min(255,Math.round(5+level*2.8))},
+    magicPower:{min:0,max:Math.min(255,Math.round(1+level*1.4))},
+    defense:{min:Math.min(255,Math.round(1+level*.8)),max:Math.min(255,Math.round(4+level*2.3))},
+    magicDefense:{min:0,max:Math.min(255,Math.round(2+level*1.7))},
+    accuracy:{min:60,max:90},
+    evasion:{min:0,max:Math.min(100,Math.round(2+level*.7))},
+    criticalChance:{min:1,max:Math.min(30,Math.round(3+level*.5))},
+    speed:{min:Math.min(255,Math.round(2+level*.45)),max:Math.min(255,Math.round(5+level*1.35))},
+    xpReward:{min:Math.round(2+level*2+Math.pow(level,1.55)*.7),max:Math.min(65535,Math.round(8+level*5+Math.pow(level,1.7)*2.2))}
+  };
+}
+
+function randomInteger(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min;
+}
+
+function setBattleValue(field,value){
+  monster.stats[field]=value;
+  var input=document.querySelector('[data-field="stats.'+field+'"]');
+  if(input) input.value=value;
+}
+
+function updateRangeLabels(){
+  var ranges=battleRanges(monster.stats.level);
+  Object.keys(ranges).forEach(function(field){
+    var label=document.getElementById(field+"Range");
+    if(label) label.textContent="Typical range: "+ranges[field].min+" - "+ranges[field].max;
+  });
+}
+
+function applyLevelGrowth(randomize){
+  var level=clampLevel(monster.stats.level);
+  monster.stats.level=level;
+  document.getElementById("monsterLevel").value=level;
+  var ranges=battleRanges(level);
+  Object.keys(ranges).forEach(function(field){
+    var range=ranges[field];
+    var value=randomize?randomInteger(range.min,range.max):Math.round((range.min+range.max)/2);
+    setBattleValue(field,value);
+  });
+  setBattleValue("currentHP",monster.stats.maxHP);
+  setBattleValue("resistancePhysical",100);
+  setBattleValue("resistanceMagic",100);
+  setBattleValue("weaponPower",0);
+  setBattleValue("spellPower",0);
+  updateRangeLabels();
+  updateSummary();
+  queueSave();
+}
+
+function randomizeAllBattleNumbers(){
+  applyLevelGrowth(true);
+  showStatus("Battle numbers randomized for level "+monster.stats.level);
+}
+
+function updateSummary(){
+  document.getElementById("heroId").textContent="ID: "+(monster.identity.id||"Not set");
+  document.getElementById("heroLevel").textContent="Level "+clampLevel(monster.stats.level);
+  document.getElementById("summaryHp").textContent=numberAt("stats.maxHP");
+  document.getElementById("summaryAttack").textContent=numberAt("stats.attackPower");
+  document.getElementById("summaryDefense").textContent=numberAt("stats.defense");
+  document.getElementById("summarySpeed").textContent=numberAt("stats.speed");
+  document.getElementById("summaryXp").textContent=numberAt("stats.xpReward");
+  var frameCount=Object.keys(animations).reduce(function(total,key){return total+animations[key].frames.length;},0);
+  document.getElementById("heroAnimCount").textContent=frameCount+" animation frame"+(frameCount===1?"":"s");
+  updateRangeLabels();
+  updateCompletion();
+}
+
+function updateCompletion(){
+  var checks=[
+    monster.identity.id,monster.identity.name,
+    numberAt("stats.level")>0,
+    numberAt("stats.maxHP")>0,numberAt("stats.currentHP")>=0,
+    numberAt("stats.attackPower")>=0,numberAt("stats.magicPower")>=0,numberAt("stats.defense")>=0,
+    numberAt("stats.magicDefense")>=0,numberAt("stats.accuracy")>=0,numberAt("stats.evasion")>=0,
+    numberAt("stats.criticalChance")>=0,numberAt("stats.speed")>=0,numberAt("stats.xpReward")>=0,
+    animations.idle.frames.length>0,animations.attack.frames.length>0,animations.hit.frames.length>0
+  ];
+  var complete=checks.filter(Boolean).length;
+  var percent=Math.round(complete/checks.length*100);
+  document.getElementById("completionMeter").style.width=percent+"%";
+  document.getElementById("completionText").textContent=percent+"% complete";
+}
+
+function queueSave(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(saveDraft,250);
+}
+
+function saveDraft(){
+  var payload=buildPayload();
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(payload));}
+  catch(error){showStatus("Local draft could not be saved",true);}
+}
+
+function loadDraft(){
+  try{
+    var saved=localStorage.getItem(STORAGE_KEY);
+    if(!saved) return false;
+    loadPayload(JSON.parse(saved));
+    saveDraft();
+    return true;
+  }catch(error){
+    showStatus("Saved draft could not be read",true);
+    return false;
+  }
+}
+
+function buildPayload(){
+  return {
+    monster:monster,
+    animations:animations
+  };
+}
+
+function loadPayload(payload){
+  if(!payload || typeof payload!=="object") throw new Error("Invalid monster file");
+  frameClipboard=null;
+  var incomingMonster=payload.monster||payload;
+  var incomingSize=sizeDefinitions[incomingMonster.size]?incomingMonster.size:"normal";
+  var oldDrops=Array.isArray(incomingMonster.drops)?incomingMonster.drops:[];
+  var maxHP=firstNumberAt(incomingMonster,["stats.maxHP","stats.hp"],defaultMonster.stats.maxHP);
+  var maxMP=firstNumberAt(incomingMonster,["stats.maxMP","stats.mp"],0);
+  monster={
+    identity:{
+      id:getPath(incomingMonster,"identity.id")||defaultMonster.identity.id,
+      name:getPath(incomingMonster,"identity.name")||defaultMonster.identity.name
+    },
+    stats:{
+      level:clampLevel(firstNumberAt(incomingMonster,["stats.level"],defaultMonster.stats.level)),
+      currentHP:firstNumberAt(incomingMonster,["stats.currentHP","stats.hp"],maxHP),
+      maxHP:maxHP,
+      currentMP:firstNumberAt(incomingMonster,["stats.currentMP","stats.mp"],maxMP),
+      maxMP:maxMP,
+      attackPower:firstNumberAt(incomingMonster,["stats.attackPower","stats.attack"],0),
+      magicPower:firstNumberAt(incomingMonster,["stats.magicPower","stats.magic"],0),
+      defense:firstNumberAt(incomingMonster,["stats.defense"],0),
+      magicDefense:firstNumberAt(incomingMonster,["stats.magicDefense"],0),
+      accuracy:firstNumberAt(incomingMonster,["stats.accuracy","stats.hitRate"],70),
+      evasion:firstNumberAt(incomingMonster,["stats.evasion","stats.dodge"],3),
+      criticalChance:firstNumberAt(incomingMonster,["stats.criticalChance","stats.crit"],3),
+      resistancePhysical:firstNumberAt(incomingMonster,["stats.resistancePhysical"],100),
+      resistanceMagic:firstNumberAt(incomingMonster,["stats.resistanceMagic"],100),
+      weaponPower:firstNumberAt(incomingMonster,["stats.weaponPower"],0),
+      spellPower:firstNumberAt(incomingMonster,["stats.spellPower"],0),
+      speed:firstNumberAt(incomingMonster,["stats.speed"],0),
+      xpReward:firstNumberAt(incomingMonster,["stats.xpReward","stats.xp"],0)
+    },
+    size:incomingSize,
+    drops:oldDrops.map(function(drop){
+      return {item:drop.item||drop.itemName||drop.itemId||"",chance:Number(drop.chance)||0};
+    })
+  };
+  animations=createDefaultAnimations();
+  stateDefinitions.forEach(function(def){
+    if(payload.animations && payload.animations[def.id]){
+      mergeDeep(animations[def.id],payload.animations[def.id]);
+    }
+  });
+  stateDefinitions.forEach(function(def){
+    var state=animations[def.id];
+    if(!Array.isArray(state.frames)) state.frames=[];
+    state.frames=state.frames.map(function(frame){
+      if(!Array.isArray(frame)) return new Array(currentSize().indices.length).fill(0);
+      if(frame.length>currentSize().indices.length){
+        return fullToCompact(compactToFull(frame,incomingSize),incomingSize);
+      }
+      var clean=frame.slice(0,currentSize().indices.length).map(clampByte);
+      while(clean.length<currentSize().indices.length) clean.push(0);
+      return clean;
+    });
+  });
+  populateFields();
+  renderDrops();
+  updateSizeDisplay();
+  selectState("idle");
+  updateSummary();
+}
+
+function exportMonster(){
+  var safeName=(monster.identity.id||monster.identity.name||"monster").replace(/[^a-z0-9_-]+/gi,"_");
+  var text=JSON.stringify(buildPayload());
+  var blob=new Blob([text],{type:"application/json"});
+  var url=URL.createObjectURL(blob);
+  var anchor=document.createElement("a");
+  anchor.href=url;
+  anchor.download=safeName+".monster.json";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+  showStatus("Monster JSON exported");
+}
+
+function importMonster(file){
+  if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(){
+    try{
+      loadPayload(JSON.parse(reader.result));
+      saveDraft();
+      showStatus("Monster imported");
+    }catch(error){
+      showStatus("That file is not valid monster JSON",true);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function newMonster(){
+  if(!window.confirm("Start a new monster? The current local draft will be replaced.")) return;
+  frameClipboard=null;
+  monster=deepClone(defaultMonster);
+  animations=createDefaultAnimations();
+  populateFields();
+  renderDrops();
+  updateSizeDisplay();
+  selectState("idle");
+  updateSummary();
+  saveDraft();
+  showStatus("New monster sheet ready");
+}
+
+function showStatus(message,isError){
+  var bar=document.getElementById("statusBar");
+  bar.textContent=message;
+  bar.className="statusBar show"+(isError?" error":"");
+  clearTimeout(statusTimer);
+  statusTimer=setTimeout(function(){bar.className="statusBar";},2600);
+}
+
+function bindButtons(){
+  document.getElementById("randomNameButton").addEventListener("click",generateRandomName);
+  document.getElementById("randomMixNameButton").addEventListener("click",generateRandomMixName);
+  document.getElementById("randomizeAllButton").addEventListener("click",randomizeAllBattleNumbers);
+  document.getElementById("sizeChoices").addEventListener("change",function(event){
+    var input=event.target.closest("[data-monster-size]");
+    if(!input) return;
+    if(!input.checked){input.checked=true;return;}
+    changeMonsterSize(input.dataset.monsterSize);
+  });
+  document.getElementById("addDropButton").addEventListener("click",function(){addDrop();});
+  document.getElementById("dropRows").addEventListener("click",function(event){
+    var button=event.target.closest("[data-remove-drop]");
+    if(button) removeDrop(Number(button.dataset.removeDrop));
+  });
+  stateGrid.addEventListener("click",function(event){
+    var button=event.target.closest("[data-state]");
+    if(button) selectState(button.dataset.state);
+  });
+  document.getElementById("saveFrameButton").addEventListener("click",saveFrame);
+  document.getElementById("insertFrameButton").addEventListener("click",insertFrame);
+  document.getElementById("duplicateFrameButton").addEventListener("click",duplicateFrame);
+  document.getElementById("deleteFrameButton").addEventListener("click",deleteFrame);
+  document.getElementById("previousFrameButton").addEventListener("click",function(){showFrame(currentFrameIndex-1);});
+  document.getElementById("nextFrameButton").addEventListener("click",function(){showFrame(currentFrameIndex+1);});
+  document.getElementById("playButton").addEventListener("click",playAnimation);
+  document.getElementById("stopButton").addEventListener("click",function(){stopPlayback=true;});
+  document.getElementById("clearDisplayButton").addEventListener("click",clearDisplayAndSave);
+  document.getElementById("applyRawButton").addEventListener("click",applyRawFrames);
+  document.getElementById("mirrorDigitPosition").addEventListener("change",refreshMirror);
+  document.getElementById("frameDuration").addEventListener("input",function(){
+    animations[currentStateId].frameDuration=Math.max(20,Number(this.value)||140);
+    queueSave();
+  });
+  document.getElementById("loopAnimation").addEventListener("change",function(){
+    animations[currentStateId].loop=this.checked;
+    queueSave();
+  });
+  document.getElementById("exportButton").addEventListener("click",exportMonster);
+  document.getElementById("importButton").addEventListener("click",function(){document.getElementById("importFile").click();});
+  document.getElementById("importFile").addEventListener("change",function(){importMonster(this.files[0]);this.value="";});
+  document.getElementById("newMonsterButton").addEventListener("click",newMonster);
+  document.addEventListener("keydown",handleFrameShortcuts);
+}
+
+buildAnimator();
+bindFields();
+bindButtons();
+updateSizeDisplay();
+renderStateCards();
+renderDrops();
+if(!loadDraft()){
+  populateFields();
+  selectState("idle");
+  updateSummary();
+}
+syncFromDisplay();
+})();
+</script>
+</body>
+</html>

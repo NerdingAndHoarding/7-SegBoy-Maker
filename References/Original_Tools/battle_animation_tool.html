@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>7-SegBoy Battle Animations</title>
+  <style>
+    :root{--bg:#10151b;--panel:#17202a;--line:#2b3948;--text:#eef4f8;--muted:#93a3b3;--gold:#f1c75b;--green:#59d28c;--red:#ee6b66}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+    header{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+    h1{font-size:20px;margin:0;text-transform:uppercase;letter-spacing:.08em}
+    main{padding:18px;display:grid;grid-template-columns:minmax(220px,280px) minmax(0,1fr);gap:14px}
+    section,aside{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px}
+    h2{font-size:14px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.08em;color:var(--gold)}
+    button,select,input{font:inherit}
+    button{border:1px solid var(--line);background:#223041;color:var(--text);border-radius:6px;padding:8px 10px;cursor:pointer}
+    button.primary{background:#24543c;border-color:#2f8157}
+    button.danger{background:#5a2424;border-color:#844040}
+    button.active{outline:2px solid var(--gold)}
+    .buttonGrid{display:grid;gap:8px}
+    .tools{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+    .field{display:grid;gap:5px;margin-bottom:10px}
+    label{font-size:12px;color:var(--muted);text-transform:uppercase;font-weight:bold;letter-spacing:.05em}
+    input,select{width:100%;background:#0d1218;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:8px}
+    .digitRow{display:grid;grid-template-columns:repeat(8,minmax(42px,1fr));gap:8px;margin-bottom:10px}
+    .digit{position:relative;aspect-ratio:3/5;min-height:80px;background:#080b0f;border:1px solid #223041;border-radius:7px}
+    .seg{position:absolute;border:0;background:#25303b;opacity:.75;padding:0;border-radius:999px}
+    .seg.on{background:var(--red);box-shadow:0 0 12px rgba(238,107,102,.45)}
+    .seg.a,.seg.d,.seg.g{height:9%;left:20%;right:20%}
+    .seg.a{top:6%}.seg.g{top:45.5%}.seg.d{bottom:6%}
+    .seg.b,.seg.c,.seg.e,.seg.f{width:12%;height:34%}
+    .seg.b{right:8%;top:11%}.seg.c{right:8%;bottom:11%}.seg.f{left:8%;top:11%}.seg.e{left:8%;bottom:11%}
+    .seg.dp{width:13%;height:8%;right:3%;bottom:2%;border-radius:50%}
+    .previewTitle{color:var(--muted);font-size:12px;margin:12px 0 6px}
+    .raw{font-family:Consolas,monospace;white-space:pre-wrap;color:#bfd0df;background:#0d1218;border:1px solid var(--line);border-radius:6px;padding:10px;min-height:72px}
+    .timeline{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+    .frameChip{font-family:Consolas,monospace;font-size:11px;color:var(--muted);padding:7px;border:1px solid var(--line);border-radius:6px;background:#0d1218}
+    .frameChip.active{border-color:var(--gold);color:var(--gold)}
+    .smallNote{color:var(--muted);font-size:12px;line-height:1.5}
+    @media(max-width:800px){main{grid-template-columns:1fr}.digit{min-height:58px}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Battle Animations</h1>
+    <div class="tools">
+      <button id="newButton" type="button">New</button>
+      <button id="importButton" type="button">Open JSON</button>
+      <button id="exportButton" class="primary" type="button">Export JSON</button>
+      <input id="importFile" type="file" accept="application/json,.json" hidden>
+    </div>
+  </header>
+  <main>
+    <aside>
+      <h2>Animation</h2>
+      <div id="stateButtons" class="buttonGrid"></div>
+      <div class="field" style="margin-top:14px">
+        <label for="previewMode">Preview mode</label>
+        <select id="previewMode">
+          <option value="normal">Same row</option>
+          <option value="down">Show shifted downwards</option>
+          <option value="up">Show shifted upwards</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="frameDuration">Frame ms</label>
+        <input id="frameDuration" type="number" min="20" max="5000" step="10" value="120">
+      </div>
+      <p class="smallNote">Draw one 8-digit effect row. The preview shows how the same data is shifted when attacker and target are on different rows.</p>
+    </aside>
+    <section>
+      <h2 id="currentTitle">Attack with sword</h2>
+      <div class="previewTitle">Editable 8 digit effect frame</div>
+      <div id="editorRow" class="digitRow"></div>
+      <div class="tools">
+        <button id="addFrameButton" class="primary" type="button">Add frame</button>
+        <button id="replaceFrameButton" type="button">Replace selected</button>
+        <button id="duplicateFrameButton" type="button">Duplicate</button>
+        <button id="deleteFrameButton" class="danger" type="button">Delete</button>
+        <button id="clearButton" type="button">Clear frame</button>
+      </div>
+      <div class="previewTitle">16 digit 8x2 shifted preview</div>
+      <div id="previewRows"></div>
+      <div class="timeline" id="timeline"></div>
+      <div class="previewTitle">Current animation data</div>
+      <div id="rawData" class="raw"></div>
+    </section>
+  </main>
+  <script>
+  (function(){
+  "use strict";
+  var SEGMENTS=["a","b","c","d","e","f","g","dp"];
+  var BITS={a:0x40,b:0x20,c:0x10,d:0x08,e:0x04,f:0x02,g:0x01,dp:0x80};
+  var STORAGE_KEY="sevenseg_battle_animation_tool_v1";
+  var states=[
+    {id:"attackSword",name:"Attack with sword"},
+    {id:"attackKnife",name:"Attack with knife"},
+    {id:"castFire",name:"Cast fire magic"},
+    {id:"castIce",name:"Cast ice magic"},
+    {id:"healMagic",name:"Heal magic"}
+  ];
+  var project=createProject();
+  var currentState="attackSword";
+  var currentFrame=-1;
+  var frame=new Array(8).fill(0);
+  var editorRow=document.getElementById("editorRow");
+  var previewRows=document.getElementById("previewRows");
+  var timeline=document.getElementById("timeline");
+  function createProject(){
+    var animations={};
+    states.forEach(function(state){animations[state.id]={frameDuration:120,loop:false,frames:[]};});
+    return {tool:"SevenSegBattleAnimationTool",dataVersion:1,animations:animations};
+  }
+  function byteToHex(value){return "0x"+("0"+(value&255).toString(16).toUpperCase()).slice(-2);}
+  function makeDigit(byte,editable,index){
+    var digit=document.createElement("div");
+    digit.className="digit";
+    SEGMENTS.forEach(function(seg){
+      var button=document.createElement("button");
+      button.type="button";
+      button.className="seg "+seg+((byte&BITS[seg])?" on":"");
+      button.title=seg.toUpperCase();
+      if(editable){
+        button.addEventListener("click",function(){
+          frame[index]^=BITS[seg];
+          render();
+        });
+      }
+      digit.appendChild(button);
+    });
+    return digit;
+  }
+  function shiftedFrame(bytes,mode){
+    var out=new Array(16).fill(0);
+    var map;
+    if(mode==="normal"){
+      bytes.forEach(function(value,index){out[index]=value;});
+      return out;
+    }
+    map=mode==="down"?
+      [{from:5,to:5,bit:null},{from:4,to:4,bit:BITS.d},{from:3,to:11,bit:BITS.a},{from:2,to:10,bit:BITS.g}]:
+      [{from:5,to:13,bit:BITS.g},{from:4,to:12,bit:BITS.a},{from:3,to:3,bit:BITS.d},{from:2,to:2,bit:BITS.g}];
+    map.forEach(function(entry){
+      if(bytes[entry.from]){
+        out[entry.to]|=entry.bit===null?bytes[entry.from]:entry.bit;
+      }
+    });
+    return out;
+  }
+  function renderPreview(){
+    var shifted=shiftedFrame(frame,document.getElementById("previewMode").value);
+    previewRows.innerHTML="";
+    [0,1].forEach(function(row){
+      var rowNode=document.createElement("div");
+      rowNode.className="digitRow";
+      for(var col=0;col<8;col+=1){
+        rowNode.appendChild(makeDigit(shifted[row*8+col],false,col));
+      }
+      previewRows.appendChild(rowNode);
+    });
+  }
+  function animation(){return project.animations[currentState];}
+  function saveDraft(){localStorage.setItem(STORAGE_KEY,JSON.stringify(project));}
+  function renderTimeline(){
+    timeline.innerHTML="";
+    animation().frames.forEach(function(saved,index){
+      var chip=document.createElement("button");
+      chip.type="button";
+      chip.className="frameChip"+(index===currentFrame?" active":"");
+      chip.textContent=String(index+1)+": "+saved.map(byteToHex).join(" ");
+      chip.addEventListener("click",function(){currentFrame=index;frame=saved.slice(0,8);render();});
+      timeline.appendChild(chip);
+    });
+  }
+  function render(){
+    editorRow.innerHTML="";
+    frame.forEach(function(byte,index){editorRow.appendChild(makeDigit(byte,true,index));});
+    document.getElementById("currentTitle").textContent=states.filter(function(state){return state.id===currentState;})[0].name;
+    document.getElementById("frameDuration").value=animation().frameDuration;
+    document.getElementById("rawData").textContent=JSON.stringify(animation(),null,2);
+    renderPreview();
+    renderTimeline();
+    saveDraft();
+  }
+  function renderStateButtons(){
+    var box=document.getElementById("stateButtons");
+    box.innerHTML="";
+    states.forEach(function(state){
+      var button=document.createElement("button");
+      button.type="button";
+      button.className=state.id===currentState?"active":"";
+      button.textContent=state.name;
+      button.addEventListener("click",function(){
+        currentState=state.id;
+        currentFrame=animation().frames.length?0:-1;
+        frame=currentFrame>=0?animation().frames[currentFrame].slice(0,8):new Array(8).fill(0);
+        renderStateButtons();
+        render();
+      });
+      box.appendChild(button);
+    });
+  }
+  function addFrame(){
+    animation().frames.push(frame.slice(0,8));
+    currentFrame=animation().frames.length-1;
+    render();
+  }
+  function replaceFrame(){
+    if(currentFrame<0){addFrame();return;}
+    animation().frames[currentFrame]=frame.slice(0,8);
+    render();
+  }
+  function duplicateFrame(){animation().frames.splice(currentFrame+1,0,frame.slice(0,8));currentFrame+=1;render();}
+  function deleteFrame(){
+    if(currentFrame<0)return;
+    animation().frames.splice(currentFrame,1);
+    currentFrame=Math.min(currentFrame,animation().frames.length-1);
+    frame=currentFrame>=0?animation().frames[currentFrame].slice(0,8):new Array(8).fill(0);
+    render();
+  }
+  function exportJson(){
+    var blob=new Blob([JSON.stringify(project,null,2)+"\n"],{type:"application/json"});
+    var link=document.createElement("a");
+    link.href=URL.createObjectURL(blob);
+    link.download="battle_animations.json";
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+  function loadProject(payload){
+    if(!payload || typeof payload!=="object" || !payload.animations) throw new Error("Invalid battle animation JSON");
+    project=createProject();
+    states.forEach(function(state){
+      if(payload.animations[state.id]){
+        project.animations[state.id].frameDuration=Number(payload.animations[state.id].frameDuration)||120;
+        project.animations[state.id].frames=Array.isArray(payload.animations[state.id].frames)?
+          payload.animations[state.id].frames.map(function(saved){return saved.slice(0,8).map(function(value){return Math.max(0,Math.min(255,Number(value)||0));});}):[];
+      }
+    });
+    currentState=states[0].id;
+    currentFrame=project.animations[currentState].frames.length?0:-1;
+    frame=currentFrame>=0?project.animations[currentState].frames[currentFrame].slice(0,8):new Array(8).fill(0);
+    renderStateButtons();
+    render();
+  }
+  document.getElementById("previewMode").addEventListener("change",render);
+  document.getElementById("frameDuration").addEventListener("input",function(){animation().frameDuration=Math.max(20,Number(this.value)||120);render();});
+  document.getElementById("addFrameButton").addEventListener("click",addFrame);
+  document.getElementById("replaceFrameButton").addEventListener("click",replaceFrame);
+  document.getElementById("duplicateFrameButton").addEventListener("click",duplicateFrame);
+  document.getElementById("deleteFrameButton").addEventListener("click",deleteFrame);
+  document.getElementById("clearButton").addEventListener("click",function(){frame=new Array(8).fill(0);render();});
+  document.getElementById("newButton").addEventListener("click",function(){if(confirm("Start new battle animation file?")){project=createProject();currentState=states[0].id;currentFrame=-1;frame=new Array(8).fill(0);renderStateButtons();render();}});
+  document.getElementById("exportButton").addEventListener("click",exportJson);
+  document.getElementById("importButton").addEventListener("click",function(){document.getElementById("importFile").click();});
+  document.getElementById("importFile").addEventListener("change",function(){
+    var file=this.files[0];
+    var reader=new FileReader();
+    reader.onload=function(){try{loadProject(JSON.parse(String(reader.result||"{}")));}catch(error){alert(error.message);}};
+    if(file) reader.readAsText(file);
+    this.value="";
+  });
+  try{var saved=localStorage.getItem(STORAGE_KEY);if(saved) project=JSON.parse(saved);}catch(error){}
+  renderStateButtons();
+  render();
+  }());
+  </script>
+</body>
+</html>

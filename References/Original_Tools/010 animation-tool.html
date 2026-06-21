@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>MAX7219 24-Digit Animator (3 x 8 Displays)</title>
+<style>
+body{font-family:Arial}
+
+.layout{
+    display:flex;
+    align-items:flex-start;
+    gap:20px;
+}
+
+.tableWrap{
+    max-height:450px;
+    overflow-y:auto;
+}
+
+#digitPane{background:black;padding:10px;display:grid;grid-template-columns:repeat(8,90px);gap:4px;width:max-content}
+.off{fill:#320000}.on{fill:red}
+table{border-collapse:collapse;margin-top:10px}
+td,th{border:1px solid #aaa;padding:4px}
+input{width:90px}
+textarea{border:1px solid #aaa;padding:8px;min-height:160px;width:900px}
+.controls{margin:8px 0}
+</style>
+</head>
+<body>
+<h1>MAX7219 Animator - 24 Digits (3 Rows x 8 Digits)</h1>
+
+<div class="layout">
+
+<div id="digitPane"></div>
+
+<div class="tableWrap">
+<table>
+<tr><th>Digit</th><th>Binary</th><th>Hex</th><th>Save Digit</th></tr>
+<tbody id="rows"></tbody>
+</table>
+</div>
+
+</div>
+
+<div class="controls">
+<label><input type="checkbox" id="mirrorDigitPosition" onchange="refreshDisplay()"> Mirror digit position</label>
+<button onclick="saveFrame()">Save Frame</button>
+<button onclick="setDefaultSaveFolder()">Set Default Save Folder</button>
+<button onclick="saveFrameToTXT()">Save Frame to TXT</button>
+<button onclick="saveAnimationToTXT()">Save Animation to TXT</button>
+<button onclick="openImportTXT()">Import TXT</button>
+<input id="importTXTFile" type="file" accept=".txt,text/plain" style="display:none" onchange="importTXTFile(this.files[0]); this.value=''">
+<button onclick="replaceStep()">Replace Step</button>
+<button onclick="insertStep()">Insert Step</button>
+<button onclick="stepBackward()">Step Backward</button>
+<button onclick="stepForward()">Step Forward</button>
+<button onclick="playAnim()">Play Animation</button>
+<button onclick="stopAnim()">Stop Animation</button>
+<label><input type="checkbox" id="loopAnim"> Loop</label>
+<button onclick="clearDisplay()">Clear</button>
+Step: <input id="stepIndex" type="number" value="0" min="0" style="width:70px">
+<span id="saveFolderStatus"></span>
+</div>
+
+<h3>Animation Data</h3>
+<textarea id="frames"></textarea>
+
+<script>
+const DIGITS=24;
+const pane=document.getElementById('digitPane');
+const rows=document.getElementById('rows');
+let animation=[];
+let currentFrameIndex=0;
+let stopPlayback=false;
+let defaultSaveFolder=null;
+const SAVE_DB='max7219SaveFolder';
+const SAVE_STORE='settings';
+const SAVE_KEY='defaultFolder';
+
+function digitSVG(idx){
+return `<svg width="90" height="140" viewBox="2 -2 12 22" data-digit="${idx}">
+<g class="digit${idx}">
+<polygon data-seg="a" class="off" points="1,1 2,0 8,0 9,1 8,2 2,2"/>
+<polygon data-seg="b" class="off" points="9,1 10,2 10,8 9,9 8,8 8,2"/>
+<polygon data-seg="c" class="off" points="9,9 10,10 10,16 9,17 8,16 8,10"/>
+<polygon data-seg="d" class="off" points="9,17 8,18 2,18 1,17 2,16 8,16"/>
+<polygon data-seg="e" class="off" points="2,17 0,16 0,10 2,9 3,10 3,16"/>
+<polygon data-seg="f" class="off" points="2,9 0,8 0,2 2,1 3,2 3,8"/>
+<polygon data-seg="g" class="off" points="1,9 2,8 8,8 9,9 8,10 2,10"/>
+<polygon data-seg="dp" class="off" points="11,16 13,16 13,18 11,18"/>
+</g></svg>`;
+}
+
+for(let i=0;i<DIGITS;i++){
+ pane.insertAdjacentHTML('beforeend',digitSVG(i));
+ rows.insertAdjacentHTML('beforeend',
+ `<tr><td>${i}</td>
+ <td><input id="bin${i}" value="00000000" oninput="binChanged(${i})"></td>
+ <td><input id="hex${i}" value="00" oninput="hexChanged(${i})"></td>
+ <td><button onclick="saveDigitToTXT(${i})">Save Digit</button></td></tr>`);
+}
+
+function displayIndex(i){
+ if(!document.getElementById('mirrorDigitPosition').checked) return i;
+ const row=Math.floor(i/8);
+ return row*8 + (7-(i%8));
+}
+
+pane.addEventListener('click',e=>{
+ if(!e.target.dataset.seg) return;
+ e.target.setAttribute('class',e.target.getAttribute('class')==='on'?'off':'on');
+ syncFromDisplay();
+});
+
+function valueFromDigit(i){
+ const svg=pane.children[displayIndex(i)];
+ let v=0;
+ const on=s=>svg.querySelector(`[data-seg="${s}"]`).getAttribute('class')==='on';
+ if(on('g'))v|=1;if(on('f'))v|=2;if(on('e'))v|=4;if(on('d'))v|=8;
+ if(on('c'))v|=16;if(on('b'))v|=32;if(on('a'))v|=64;if(on('dp'))v|=128;
+ return v;
+}
+
+function setDigit(i,v){
+ const map={g:0,f:1,e:2,d:3,c:4,b:5,a:6,dp:7};
+ const svg=pane.children[displayIndex(i)];
+ for(const [s,b] of Object.entries(map)){
+   svg.querySelector(`[data-seg="${s}"]`).setAttribute('class',(v&(1<<b))?'on':'off');
+ }
+}
+
+function syncFromDisplay(){
+ for(let i=0;i<DIGITS;i++){
+   let v=valueFromDigit(i);
+   document.getElementById('hex'+i).value=v.toString(16).toUpperCase().padStart(2,'0');
+   document.getElementById('bin'+i).value=v.toString(2).padStart(8,'0');
+ }
+}
+
+function binChanged(i){
+ let b=document.getElementById('bin'+i).value.replace(/[^01]/g,'').padStart(8,'0').slice(-8);
+ let v=parseInt(b,2);
+ document.getElementById('bin'+i).value=b;
+ document.getElementById('hex'+i).value=v.toString(16).toUpperCase().padStart(2,'0');
+ setDigit(i,v);
+}
+
+function hexChanged(i){
+ let h=document.getElementById('hex'+i).value.replace(/[^0-9A-Fa-f]/g,'').padStart(2,'0').slice(-2);
+ let v=parseInt(h,16);
+ document.getElementById('hex'+i).value=h.toUpperCase();
+ document.getElementById('bin'+i).value=v.toString(2).padStart(8,'0');
+ setDigit(i,v);
+}
+
+function clearDisplay(){ for(let i=0;i<DIGITS;i++) setDigit(i,0); syncFromDisplay(); }
+function currentFrame(){ let f=[]; for(let i=0;i<DIGITS;i++) f.push(valueFromDigit(i)); return f; }
+function saveFrame(){ animation.push(currentFrame()); renderFrames(); }
+
+function setSaveFolderStatus(text){
+ document.getElementById('saveFolderStatus').textContent=text ? ' ' + text : '';
+}
+
+function openSaveDB(){
+ return new Promise((resolve,reject)=>{
+  const req=indexedDB.open(SAVE_DB,1);
+  req.onupgradeneeded=()=>req.result.createObjectStore(SAVE_STORE);
+  req.onsuccess=()=>resolve(req.result);
+  req.onerror=()=>reject(req.error);
+ });
+}
+
+async function saveFolderHandle(handle){
+ const db=await openSaveDB();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(SAVE_STORE,'readwrite');
+  tx.objectStore(SAVE_STORE).put(handle,SAVE_KEY);
+  tx.oncomplete=()=>{ db.close(); resolve(); };
+  tx.onerror=()=>{ db.close(); reject(tx.error); };
+ });
+}
+
+async function loadFolderHandle(){
+ const db=await openSaveDB();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(SAVE_STORE,'readonly');
+  const req=tx.objectStore(SAVE_STORE).get(SAVE_KEY);
+  req.onsuccess=()=>resolve(req.result || null);
+  req.onerror=()=>reject(req.error);
+  tx.oncomplete=()=>db.close();
+ });
+}
+
+async function setDefaultSaveFolder(){
+ if(!window.showDirectoryPicker){
+  alert('Default save folder is not supported in this browser. Use Save As instead.');
+  return;
+ }
+ try{
+  defaultSaveFolder=await window.showDirectoryPicker({mode:'readwrite'});
+  await saveFolderHandle(defaultSaveFolder);
+  setSaveFolderStatus('Default save folder set');
+ }catch(err){
+  if(!err || err.name!=='AbortError') alert('Could not set default save folder.');
+ }
+}
+
+async function getWritableDefaultFolder(){
+ if(!defaultSaveFolder){
+  try{ defaultSaveFolder=await loadFolderHandle(); }catch(err){ defaultSaveFolder=null; }
+ }
+ if(!defaultSaveFolder) return null;
+ let permission=await defaultSaveFolder.queryPermission({mode:'readwrite'});
+ if(permission!=='granted'){
+  permission=await defaultSaveFolder.requestPermission({mode:'readwrite'});
+ }
+ return permission==='granted' ? defaultSaveFolder : null;
+}
+
+async function downloadTXT(filename, text){
+ const folder=await getWritableDefaultFolder();
+ if(folder){
+  try{
+   const fileHandle=await folder.getFileHandle(filename,{create:true});
+   const writable=await fileHandle.createWritable();
+   await writable.write(text);
+   await writable.close();
+   setSaveFolderStatus(`Saved to default folder: ${filename}`);
+   return;
+  }catch(err){
+   setSaveFolderStatus('Default folder failed, using Save As');
+  }
+ }
+ if(window.showSaveFilePicker){
+  try{
+   const handle=await window.showSaveFilePicker({
+    suggestedName:filename,
+    types:[{description:'Text file',accept:{'text/plain':['.txt']}}]
+   });
+   const writable=await handle.createWritable();
+   await writable.write(text);
+   await writable.close();
+   return;
+  }catch(err){
+   if(err && err.name==='AbortError') return;
+  }
+ }
+ const blob=new Blob([text],{type:'text/plain'});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');
+ a.href=url;
+ a.download=filename;
+ document.body.appendChild(a);
+ a.click();
+ a.remove();
+ URL.revokeObjectURL(url);
+}
+
+function frameToTXT(frame, label){
+ return `${label}\n` + frame.map((v,i)=>
+   `Digit ${i}: ${v.toString(2).padStart(8,'0')}  0x${v.toString(16).toUpperCase().padStart(2,'0')}`
+ ).join('\n');
+}
+
+function saveFrameToTXT(){
+ const idx=document.getElementById('stepIndex').value || currentFrameIndex;
+ downloadTXT(`frame_${idx}.txt`, frameToTXT(currentFrame(), `Frame ${idx}`));
+}
+
+function saveAnimationToTXT(){
+ parseFrames();
+ const frames=animation.length ? animation : [currentFrame()];
+ const text=frames.map((f,n)=>frameToTXT(f, `Frame ${n}`)).join('\n\n');
+ downloadTXT('animation.txt', text);
+}
+
+function saveDigitToTXT(i){
+ const v=valueFromDigit(i);
+ downloadTXT(`digit_${i}.txt`, v.toString(2).padStart(8,'0') + '\n');
+}
+
+function openImportTXT(){
+ document.getElementById('importTXTFile').click();
+}
+
+function parseSavedTXTFrames(txt){
+ const frames=[];
+ let current=null;
+ const lines=txt.split(/\r?\n/);
+ for(const line of lines){
+  const frameMatch=line.match(/^\s*Frame\s+(\d+)/i);
+  if(frameMatch){
+   if(current) frames.push(current);
+   current=new Array(DIGITS).fill(0);
+   continue;
+  }
+  const digitMatch=line.match(/Digit\s+(\d+)\s*:\s*([01]{8})(?:\s+0x[0-9A-Fa-f]{1,2})?/i);
+  if(digitMatch){
+   if(!current) current=new Array(DIGITS).fill(0);
+   const digit=parseInt(digitMatch[1],10);
+   if(digit>=0 && digit<DIGITS) current[digit]=parseInt(digitMatch[2],2);
+  }
+ }
+ if(current) frames.push(current);
+ return frames;
+}
+
+async function importTXTFile(file){
+ if(!file) return;
+ const txt=await file.text();
+ const savedFrames=parseSavedTXTFrames(txt);
+ if(savedFrames.length){
+  animation=savedFrames;
+  renderFrames();
+  showFrame(0);
+  setSaveFolderStatus(`Imported ${savedFrames.length} frame${savedFrames.length===1?'':'s'}`);
+  return;
+ }
+
+ const trimmed=txt.trim();
+ if(/^[01]{8}$/.test(trimmed)){
+  let digitMatch=file.name.match(/digit[_ -]?(\d+)/i);
+  let digit=digitMatch ? parseInt(digitMatch[1],10) : NaN;
+  if(isNaN(digit) || digit<0 || digit>=DIGITS){
+   const answer=prompt('Import this digit to which digit number? (0-23)','0');
+   digit=parseInt(answer,10);
+  }
+  if(digit>=0 && digit<DIGITS){
+   setDigit(digit,parseInt(trimmed,2));
+   syncFromDisplay();
+   setSaveFolderStatus(`Imported digit ${digit}`);
+  }
+  return;
+ }
+
+ document.getElementById('frames').value=txt;
+ parseFrames();
+ if(animation.length){
+  renderFrames();
+  showFrame(0);
+  setSaveFolderStatus(`Imported ${animation.length} frame${animation.length===1?'':'s'}`);
+ }else{
+  alert('Could not find frame, animation, or digit data in this TXT file.');
+ }
+}
+
+function renderFrames(){
+ document.getElementById('frames').value=animation.map((f,n)=>
+ `{ ${f.map(v=>'0x'+v.toString(16).padStart(2,'0')).join(', ')} }, // Frame ${n}`
+ ).join('\n');
+}
+
+function parseFrames(){
+ const txt=document.getElementById('frames').value;
+ const matches=[...txt.matchAll(/\{([^}]*)\}/g)];
+ animation=matches.map(m=>m[1].split(',').map(x=>parseInt(x.trim(),0)).filter(v=>!isNaN(v)).slice(0,DIGITS));
+}
+
+function showFrame(idx){
+ parseFrames();
+ if(animation.length===0) return;
+ idx=Math.max(0,Math.min(idx,animation.length-1));
+ currentFrameIndex=idx;
+ document.getElementById('stepIndex').value=idx;
+ for(let i=0;i<DIGITS;i++) setDigit(i, animation[idx][i]||0);
+ syncFromDisplay();
+}
+
+function replaceStep(){
+ parseFrames();
+ let idx=parseInt(document.getElementById('stepIndex').value,10)||0;
+ animation[idx]=currentFrame();
+ renderFrames();
+}
+
+function insertStep(){
+ parseFrames();
+ let idx=parseInt(document.getElementById('stepIndex').value,10)||0;
+ animation.splice(idx,0,currentFrame());
+ renderFrames();
+}
+
+function stepForward(){ showFrame(currentFrameIndex+1); }
+function stepBackward(){ showFrame(currentFrameIndex-1); }
+function stopAnim(){ stopPlayback=true; }
+
+async function playAnim(){
+ parseFrames(); if(animation.length===0) return;
+ stopPlayback=false;
+ do{
+  for(let f=0; f<animation.length; f++){
+   if(stopPlayback) return;
+   showFrame(f);
+   await new Promise(r=>setTimeout(r,120));
+  }
+ }while(document.getElementById('loopAnim').checked && !stopPlayback);
+}
+
+function refreshDisplay(){
+ for(let i=0;i<DIGITS;i++){
+   let v=parseInt(document.getElementById('hex'+i).value||'0',16)||0;
+   setDigit(i,v);
+ }
+}
+
+async function initSaveFolder(){
+ if(!window.showDirectoryPicker){
+  setSaveFolderStatus('Default folder not supported');
+  return;
+ }
+ try{
+  defaultSaveFolder=await loadFolderHandle();
+  if(defaultSaveFolder) setSaveFolderStatus('Default save folder remembered');
+ }catch(err){
+  defaultSaveFolder=null;
+ }
+}
+
+syncFromDisplay();
+initSaveFolder();
+</script>
+</body>
+</html>
