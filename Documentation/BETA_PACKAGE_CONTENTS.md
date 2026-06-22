@@ -14,6 +14,7 @@ Use this when making a clean copy of the beta folder for sharing.
 - `README.md`
 - `CHANGELOG.md`
 - `.gitignore` for the public repository
+- `.gitlab-ci.yml` for GitLab Pages
 - `References/Original_Tools` if the 018 import reference is still needed for
   beta explanation or comparison
 
@@ -88,7 +89,8 @@ Include these if the beta copy should run browser self-tests:
   - `Documentation/HARDWARE_PROFILE.md`,
   - `Documentation/TUTORIAL_VIDEO_OUTLINE.md`,
   - `Documentation/BETA_SCOPE.md`,
-  - `Documentation/BETA_RELEASE_CHECKLIST.md`.
+  - `Documentation/BETA_RELEASE_CHECKLIST.md`,
+  - `Documentation/GITLAB_MIRROR_STEPS.md`.
 
 ## Repository Metadata Draft
 
@@ -154,6 +156,13 @@ Use the clean public package folder, not the development folder:
 9. Paste the release body draft above.
 10. After publishing, copy the repository and release links into
     `Documentation/BETA_TEST_RECORD.md`.
+
+## GitLab Mirror Notes
+
+- Use `Documentation/GITLAB_MIRROR_STEPS.md`.
+- GitLab Pages uses `.gitlab-ci.yml`.
+- GitLab publishing requires GitLab login and explicit user approval.
+- The GitLab mirror should use the same clean public package as GitHub.
 
 ## Rule
 

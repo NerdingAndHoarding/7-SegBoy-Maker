@@ -19,6 +19,10 @@ explicitly approves GitLab publishing.
   `https://github.com/NerdingAndHoarding/7-SegBoy-Maker`.
 - GitHub release `v0.1.0-beta` is published at
   `https://github.com/NerdingAndHoarding/7-SegBoy-Maker/releases/tag/v0.1.0-beta`.
+- R11-P03 preparation has added `.gitlab-ci.yml` and
+  `Documentation/GITLAB_MIRROR_STEPS.md`.
+- GitLab CLI package `GLab.GLab` is installed, but the current shell may need a
+  restart before `glab` is visible.
 - The public beta includes combined Arduino worldmap, battle, music, battle
   calculation selection, and one EEPROM runtime save slot.
 - The development folder still contains backups and history; the clean package
@@ -32,12 +36,14 @@ action. Until then, prefer documentation and release-note edits only:
 - `Documentation/BETA_PACKAGE_CONTENTS.md`
 - `Documentation/BETA_RELEASE_CHECKLIST.md`
 - `Documentation/BETA_TEST_RECORD.md`
+- `Documentation/GITLAB_MIRROR_STEPS.md`
 - `Documentation/DECISIONS_AND_TESTS.md`
 - `Documentation/ROADMAP.md`
 - `START_HERE.md`
 - `README.md`
 - `CHANGELOG.md`
 - `.gitignore`
+- `.gitlab-ci.yml`
 - `Prompts/CURRENT_MILESTONE.md`
 
 Do not publish to GitLab until the user explicitly asks. If a GitLab tool,

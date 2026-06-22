@@ -87,6 +87,7 @@ The pass/fail source is `Documentation/BETA_RELEASE_CHECKLIST.md`.
 - GitHub Pages enabled: yes,
   `https://nerdingandhoarding.github.io/7-SegBoy-Maker/`
 - GitLab mirror published:
+- GitLab Pages enabled:
 - GitHub/GitLab cross-links:
 - Tutorial scripts or links prepared:
 - Tutorial links added to README/release notes:

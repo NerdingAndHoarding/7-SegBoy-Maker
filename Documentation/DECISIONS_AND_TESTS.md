@@ -1564,3 +1564,85 @@ historical reports remain archived.
 - GitHub Pages enabled from branch `main`, path `/`:
   `https://nerdingandhoarding.github.io/7-SegBoy-Maker/`.
 - Active milestone advanced to R11-P03: GitLab public mirror.
+
+### Post-beta feature milestone plan - 2026-06-22
+
+- Converted `Prompts/Additional_features_to_add_to_7-seg-maker.txt` into
+  `Documentation/POST_BETA_FEATURE_MILESTONES.md`.
+- The plan follows the public-beta maintenance rule: new features start in the
+  development folder and only move to the public package after browser,
+  preflight, Arduino export, and hardware testing when relevant.
+- The milestone order favors item/equipment and battle visuals before larger
+  map nesting, multi-enemy battles, hero selection, and improved music tools.
+- Updated `Documentation/ROADMAP.md` so the post-beta backlog points to the new
+  milestone document and no longer names `R10-P03` as the current next step.
+
+### Post-beta fast-track roadmap revision - 2026-06-22
+
+- Re-read `Prompts/Additional_features_to_add_to_7-seg-maker.txt`.
+- Rewrote `Documentation/POST_BETA_FEATURE_MILESTONES.md` into a faster,
+  moderately safe plan.
+- Removed the separate giant schema-foundation milestone. Schema work is now
+  added only when a feature needs it.
+- Merged items, equipment, and world-map menu into one playable feature group.
+- Merged imported battle visuals and `BattleModeActionAnimations` into one
+  feature group.
+- Merged two-hero party and multiple enemies into one expanded battle group.
+- Kept separate Arduino tests only for risky changes such as display layout,
+  nested map transitions, EEPROM/save expansion, audio timing, and large
+  memory changes.
+- Switched the requested order so battle visuals/action animations come before
+  the longer RPG Section 3 expansion.
+
+### Tool access implementation - 2026-06-22
+
+- Implemented safe local helper scaffolding from `access_and_gains.txt`.
+- Added `Maintenance/Check-ToolAccess.ps1` and `.cmd` wrapper.
+- Added `Maintenance/Compile-ArduinoSketch.ps1` and `.cmd` wrapper.
+- Verified Git is installed:
+  `C:\Program Files\Git\cmd\git.exe`, version `2.54.0.windows.1`.
+- Verified GitHub CLI is installed and authenticated for
+  `NerdingAndHoarding`, version `2.95.0`.
+- Initial check found Node.js missing from this Codex environment.
+- Initial check found Arduino CLI missing from this Codex environment.
+- Arduino upload automation is intentionally excluded. The Arduino helper is
+  compile-only.
+- Direct `.ps1` execution may be blocked by Windows policy. The helper scripts
+  work after a process-only PowerShell bypass:
+  `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force`.
+- Verified the compile helper fails safely when `arduino-cli` is missing and
+  does not attempt upload.
+
+### Tool access completed - 2026-06-22
+
+- Installed Node.js LTS with winget:
+  `OpenJS.NodeJS.LTS`, version `v24.17.0`.
+- Installed Arduino CLI with winget:
+  `ArduinoSA.CLI`, version `1.5.1`.
+- Installed/verified Arduino AVR core:
+  `arduino:avr@1.8.8`.
+- Updated `Maintenance/Check-ToolAccess.ps1` to find Node.js at:
+  `C:\Program Files\nodejs\node.exe`.
+- Verified access check now reports OK for:
+  Git, GitHub CLI, Node.js, and Arduino CLI.
+- Ran compile-only Arduino check on:
+  `Arduino_Tests\SevenSeg_Combined_Game_Test_20260621_161810_852`.
+- Compile result:
+  - flash `16124 / 30720 bytes`,
+  - global variables `725 / 2048 bytes`,
+  - free SRAM after globals `1323 bytes`.
+- No Arduino upload was performed.
+
+### R11-P03 GitLab mirror preparation - 2026-06-22
+
+- Installed GitLab CLI package with winget:
+  `GLab.GLab`, version `1.103.0`.
+- The current Codex shell did not yet expose `glab.exe` after install; a Codex
+  restart may be needed before command-line GitLab login/publishing.
+- Added `.gitlab-ci.yml` for GitLab Pages static hosting.
+- Added `Documentation/GITLAB_MIRROR_STEPS.md` with manual and command-line
+  mirror instructions.
+- Updated package/checklist/test-record docs to include GitLab Pages and mirror
+  steps.
+- No GitLab repository was created and no GitLab publishing was performed in
+  this step.

@@ -97,5 +97,6 @@ For the final beta candidate, record the result in
 - Publish the tested beta to GitHub.
 - Create a GitHub beta tag/release with the tested package.
 - Publish or mirror the same tested beta to GitLab.
+- Confirm `.gitlab-ci.yml` is present if GitLab Pages should serve the app.
 - Confirm GitHub and GitLab link to each other.
 - Link tutorial videos or written tutorials from both repository READMEs.

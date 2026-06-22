@@ -1,0 +1,10 @@
+pages:
+  stage: deploy
+  script:
+    - mkdir public
+    - find . -maxdepth 1 -mindepth 1 ! -name public ! -name .git -exec cp -r {} public/ \;
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
