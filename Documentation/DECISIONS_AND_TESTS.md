@@ -1646,3 +1646,39 @@ historical reports remain archived.
   steps.
 - No GitLab repository was created and no GitLab publishing was performed in
   this step.
+
+### R12-P01 tutorial scripts prepared - 2026-06-22
+
+- Added numbered tutorial script drafts under `tutorials`.
+- Added `tutorials/README.txt` as the script index and asset-needs checklist.
+- Tutorial set currently includes:
+  - `001_short_intro_turn_based_rpg_7segboy.txt`,
+  - `001b_funComersial_short_intro_turn_based_rpg_7segboy.txt`,
+  - `002_game_maker_description_hidden_advanced_tools.txt`,
+  - `003_game_maker_description_advanced_tools_active.txt`,
+  - `004_hardware_files_schematic_pcb_gerber_bom_ordering.txt`,
+  - `005_hardware_assembly_tutorial.txt`,
+  - `006_edit_your_own_rpg_and_save_project.txt`,
+  - `007_planned_future_features.txt`.
+- Updated tutorial outline. The `tutorials` folder is local recording material
+  and should not be included in public source releases.
+- Active milestone advanced to R12-P02: tutorial assets.
+
+### R12-P02 tutorial asset checklist - 2026-06-22
+
+- Added `tutorials/ASSET_CHECKLIST.txt`.
+- The checklist lists screenshots, photos, diagrams, and example files needed
+  for each tutorial script.
+- Hardware tutorial assets are required to match only the official wiring from
+  `Documentation/HARDWARE_PROFILE.md`.
+- Assets that are not present yet are marked `NEEDED` instead of being treated
+  as complete.
+
+### Tutorial publication policy corrected - 2026-06-22
+
+- User clarified that tutorial scripts should not be published.
+- Tutorials will be uploaded manually to YouTube.
+- Removed `tutorials` from public package contents.
+- Removed tutorial script links from public release-note link list.
+- Public package local history was reset to remove the unpushed tutorial
+  commits.

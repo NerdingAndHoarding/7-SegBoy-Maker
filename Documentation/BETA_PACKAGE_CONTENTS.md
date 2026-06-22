@@ -67,6 +67,8 @@ Include these if the beta copy should run browser self-tests:
   documentation
 - Experimental standalone design tools unless they are clearly linked from the
   beta README
+- `tutorials` script drafts and recording notes; tutorials are uploaded to
+  YouTube manually, not published as repository source files.
 
 ## Before Sharing
 

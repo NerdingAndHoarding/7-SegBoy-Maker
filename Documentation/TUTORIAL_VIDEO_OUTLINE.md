@@ -3,6 +3,15 @@
 This is the static tutorial plan for the first beta. Keep the videos short and
 practical. Do not promise features that are not in the beta.
 
+Draft scripts for recording live only in the development folder:
+
+`tutorials`
+
+The folder includes numbered `.txt` scripts plus `tutorials/README.txt`.
+These scripts are not part of the public repository package. Finished tutorials
+will be uploaded to YouTube manually, and public docs should link to the
+YouTube videos when they exist.
+
 ## Video 1: Open The Tool
 
 - Open `index.html` directly in Chrome.
@@ -95,3 +104,21 @@ practical. Do not promise features that are not in the beta.
 - Terrain, treasure, goal, beast markers, or map triggers.
 - Any workflow that requires editing generated Arduino code by hand.
 - General-purpose RPG systems beyond the approved Minimal RPG beta.
+
+## Current Script Set
+
+- `001_short_intro_turn_based_rpg_7segboy.txt`
+- `001b_funComersial_short_intro_turn_based_rpg_7segboy.txt`
+- `002_game_maker_description_hidden_advanced_tools.txt`
+- `003_game_maker_description_advanced_tools_active.txt`
+- `004_hardware_files_schematic_pcb_gerber_bom_ordering.txt`
+- `005_hardware_assembly_tutorial.txt`
+- `006_edit_your_own_rpg_and_save_project.txt`
+- `007_planned_future_features.txt`
+
+## Publication Policy
+
+- Do not publish raw tutorial scripts in the GitHub/GitLab source package.
+- Record and publish finished videos manually on YouTube.
+- Add public YouTube links to README/release notes after the videos are live.
+- Keep local scripts in the development folder for planning and re-recording.

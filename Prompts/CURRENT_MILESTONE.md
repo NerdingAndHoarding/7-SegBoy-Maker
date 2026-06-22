@@ -1,9 +1,8 @@
-# Current Milestone: R11-P03
+# Current Milestone: R12-P02
 
 ## Goal
 
-Publish or mirror the same clean public beta package to GitLab when the user
-explicitly approves GitLab publishing.
+Prepare tutorial assets for the public beta tutorial scripts.
 
 ## Current Project State
 
@@ -23,6 +22,9 @@ explicitly approves GitLab publishing.
   `Documentation/GITLAB_MIRROR_STEPS.md`.
 - GitLab CLI package `GLab.GLab` is installed, but the current shell may need a
   restart before `glab` is visible.
+- R12-P01 tutorial scripts are drafted in local development folder `tutorials`.
+  They are not part of the public source package; finished videos will be
+  uploaded manually to YouTube.
 - The public beta includes combined Arduino worldmap, battle, music, battle
   calculation selection, and one EEPROM runtime save slot.
 - The development folder still contains backups and history; the clean package
@@ -30,15 +32,17 @@ explicitly approves GitLab publishing.
 
 ## Files Allowed
 
-For R11-P03, publishing requires explicit user approval before any GitLab
-action. Until then, prefer documentation and release-note edits only:
+For R12-P02, prepare tutorial assets and asset instructions. Do not require
+new app features.
 
 - `Documentation/BETA_PACKAGE_CONTENTS.md`
 - `Documentation/BETA_RELEASE_CHECKLIST.md`
 - `Documentation/BETA_TEST_RECORD.md`
 - `Documentation/GITLAB_MIRROR_STEPS.md`
+- `Documentation/TUTORIAL_VIDEO_OUTLINE.md`
 - `Documentation/DECISIONS_AND_TESTS.md`
 - `Documentation/ROADMAP.md`
+- `tutorials`
 - `START_HERE.md`
 - `README.md`
 - `CHANGELOG.md`
@@ -46,21 +50,23 @@ action. Until then, prefer documentation and release-note edits only:
 - `.gitlab-ci.yml`
 - `Prompts/CURRENT_MILESTONE.md`
 
-Do not publish to GitLab until the user explicitly asks. If a GitLab tool,
-token, or command is needed and unavailable, stop and explain the manual steps.
+Do not publish tutorials or make new public releases until the user explicitly
+asks.
 
 Back up files before editing.
 
 ## Acceptance Test
 
-- GitLab repository is public or clearly marked as the official mirror.
-- GitLab README matches GitHub.
-- GitLab tag/release matches the GitHub beta tag.
-- GitHub and GitLab repositories point to each other.
-- The next step after GitLab publishing is R12-P01 tutorial scripts.
+- Tutorial asset checklist exists.
+- Screenshots/photos/diagrams needed by the scripts are listed clearly.
+- Hardware wiring images must match the one official wiring only.
+- Any unavailable assets are marked as still needed.
+- Raw tutorial scripts remain local and are not published as repository source.
+- The next step after assets is R12-P03 tutorial publication.
 
 ## Next Milestones
 
-After R11-P03 passes:
+After R12-P02 passes:
 
-- R12-P01 to R12-P03: tutorial scripts/assets and tutorial publication.
+- R12-P03: tutorial publication.
+- Then begin post-beta feature work or return to GitLab mirror if desired.

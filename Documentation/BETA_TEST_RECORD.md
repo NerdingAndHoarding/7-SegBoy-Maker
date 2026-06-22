@@ -89,7 +89,8 @@ The pass/fail source is `Documentation/BETA_RELEASE_CHECKLIST.md`.
 - GitLab mirror published:
 - GitLab Pages enabled:
 - GitHub/GitLab cross-links:
-- Tutorial scripts or links prepared:
+- Tutorial scripts or links prepared: local tutorial scripts exist in
+  development folder `tutorials`; public YouTube links not published yet.
 - Tutorial links added to README/release notes:
 
 ## Release Decision
