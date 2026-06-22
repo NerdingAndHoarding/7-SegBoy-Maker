@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>8-bit JRPG Chiptune Song Machine</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+<style>
+  :root{
+    --bg:#10131a; --panel:#1b2030; --panel2:#242b3d; --text:#edf2ff;
+    --muted:#a9b4cc; --accent:#79e2ff; --accent2:#ffc857; --bad:#ff6b6b;
+    --ok:#9cff9c; --border:#34405d;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:linear-gradient(180deg,#0d1017,#151a25); color:var(--text)}
+  header{padding:24px 20px 12px; border-bottom:1px solid var(--border); background:#0e121b}
+  h1{margin:0 0 6px; font-size:24px; letter-spacing:.3px}
+  header p{margin:0; color:var(--muted); line-height:1.45; max-width:980px}
+  main{display:grid; grid-template-columns:minmax(320px,420px) 1fr; gap:18px; padding:18px; max-width:1350px; margin:auto}
+  section{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:16px; box-shadow:0 12px 30px rgba(0,0,0,.18)}
+  h2{font-size:18px; margin:0 0 12px}
+  h3{font-size:15px; margin:18px 0 8px; color:var(--accent)}
+  .controls{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  label{display:block; font-size:12px; color:var(--muted); margin-bottom:5px}
+  select,input[type="number"],input[type="text"],input[type="range"]{width:100%}
+  select,input[type="number"],input[type="text"]{background:var(--panel2); color:var(--text); border:1px solid var(--border); border-radius:9px; padding:9px}
+  input[type="range"]{accent-color:var(--accent)}
+  .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+  button{background:var(--panel2); color:var(--text); border:1px solid var(--border); border-radius:10px; padding:10px 12px; cursor:pointer; font-weight:650}
+  button:hover{border-color:var(--accent); transform:translateY(-1px)}
+  button.primary{background:linear-gradient(180deg,#16657a,#124b60); border-color:#2bbedc}
+  button.gold{background:linear-gradient(180deg,#735112,#5a3f0d); border-color:#d09a2d}
+  button.danger{background:#4a1c26; border-color:#8c3244}
+  .full{grid-column:1 / -1}
+  .status{margin-top:10px; padding:10px; border-radius:10px; background:#101722; color:var(--muted); border:1px solid var(--border); min-height:44px; line-height:1.35}
+  .analysisBox{min-height:150px}
+  input[type="file"]{width:100%; background:var(--panel2); color:var(--text); border:1px solid var(--border); border-radius:9px; padding:9px}
+  .checkline{display:flex; gap:8px; align-items:flex-start; color:var(--muted); font-size:12px; line-height:1.35}
+  .meter{height:11px; background:#0c1018; border-radius:999px; overflow:hidden; border:1px solid var(--border)}
+  .meter div{height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); width:0%}
+  textarea{width:100%; min-height:320px; resize:vertical; background:#0b0e15; color:#e7f0ff; border:1px solid var(--border); border-radius:12px; padding:12px; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:12px; line-height:1.4}
+  .notegrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(58px,1fr)); gap:5px; margin-top:10px}
+  .note{background:#111827; border:1px solid #27334b; border-radius:7px; padding:5px; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:11px; text-align:center; color:#dbe8ff}
+  .note.bass{color:#b8ffcb}
+  .hint{color:var(--muted); font-size:12px; line-height:1.5}
+  .small{font-size:12px; color:var(--muted)}
+  .pill{display:inline-block; padding:2px 7px; border:1px solid var(--border); border-radius:999px; color:var(--muted); background:#111827; font-size:12px; margin-right:4px; margin-bottom:4px}
+  @media(max-width:900px){main{grid-template-columns:1fr}.controls{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>8-bit JRPG Chiptune Song Machine</h1>
+  <p>Generates original two-square-wave + triangle-bass songs for Arduino Nano style hardware. Listen in the browser, export MP3, or export compact Arduino <code>.ino</code> code with PROGMEM song arrays. The <b>Type</b> dial blends strict functional harmony with chaotic random chromatic behavior. The upload analyser can estimate parameters from MP3/WAV/OGG files, play a MIDI-like square/triangle version, and use that extraction as the base for variations.</p>
+</header>
+
+<main>
+<section>
+  <h2>1. Generator Parameters</h2>
+  <div class="controls">
+    <div>
+      <label for="songType">Song type</label>
+      <select id="songType">
+        <option value="battle">Battle / fight</option>
+        <option value="world">World map</option>
+        <option value="dungeon">Dungeon</option>
+        <option value="town">Town</option>
+        <option value="boss">Boss fight</option>
+      </select>
+    </div>
+    <div>
+      <label for="mood">Mood</label>
+      <select id="mood">
+        <option value="aggressive">Aggressive</option>
+        <option value="heroic">Heroic</option>
+        <option value="relaxed">Relaxed</option>
+        <option value="mysterious">Mysterious</option>
+        <option value="sad">Sad</option>
+        <option value="dark">Dark</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="scale">Scale</label>
+      <select id="scale">
+        <option value="minor">Natural minor</option>
+        <option value="major">Major</option>
+        <option value="dorian">Dorian</option>
+        <option value="phrygian">Phrygian</option>
+        <option value="harmonicMinor">Harmonic minor</option>
+        <option value="melodicMinor">Melodic minor</option>
+        <option value="minorPentatonic">Minor pentatonic</option>
+        <option value="blues">Blues</option>
+      </select>
+    </div>
+    <div>
+      <label for="root">Root note</label>
+      <select id="root">
+        <option value="0">C</option><option value="1">C#</option><option value="2">D</option><option value="3">D#</option>
+        <option value="4" selected>E</option><option value="5">F</option><option value="6">F#</option><option value="7">G</option>
+        <option value="8">G#</option><option value="9">A</option><option value="10">A# / Bb</option><option value="11">B</option>
+      </select>
+    </div>
+
+    <div class="full">
+      <label for="harmonyType">Type: <span id="harmonyTypeOut">20</span>% &mdash; classical harmonic &rarr; random chaotic</label>
+      <input id="harmonyType" type="range" min="0" max="100" value="20" />
+      <p class="hint">0% is strict tonal mode: chord tones on strong beats, stepwise passing tones on weak beats, chord-root bass, and consonant second-square support. 100% allows random chromatic melody, unstable bass, and dissonant intervals.</p>
+    </div>
+
+    <div>
+      <label for="bpm">BPM: <span id="bpmOut">168</span></label>
+      <input id="bpm" type="range" min="70" max="220" value="168" />
+    </div>
+    <div>
+      <label for="bars">Length in bars</label>
+      <select id="bars">
+        <option>4</option><option selected>8</option><option>12</option><option>16</option><option>24</option><option>32</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="phraseBars">Phrase length</label>
+      <select id="phraseBars">
+        <option>1</option><option selected>2</option><option>4</option><option>8</option>
+      </select>
+    </div>
+    <div>
+      <label for="leadOctave">Lead octave</label>
+      <select id="leadOctave">
+        <option>3</option><option selected>4</option><option>5</option><option>6</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="density">Note density</label>
+      <select id="density">
+        <option value="sparse">Sparse</option>
+        <option value="normal">Normal</option>
+        <option value="busy" selected>Busy</option>
+        <option value="manic">Very busy</option>
+      </select>
+    </div>
+    <div>
+      <label for="leap">Leap amount: <span id="leapOut">65</span>%</label>
+      <input id="leap" type="range" min="0" max="100" value="65" />
+    </div>
+
+    <div>
+      <label for="repetition">Repetition: <span id="repetitionOut">55</span>%</label>
+      <input id="repetition" type="range" min="0" max="100" value="55" />
+    </div>
+    <div>
+      <label for="bassMotion">Bass motion</label>
+      <select id="bassMotion">
+        <option value="pedal">Pedal root</option>
+        <option value="rootFifth" selected>Root / fifth</option>
+        <option value="walking">Walking</option>
+        <option value="arpeggio">Arpeggio</option>
+        <option value="octave">Aggressive octave</option>
+        <option value="drone">Drone</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="secondVoice">Second square layer</label>
+      <select id="secondVoice">
+        <option value="off">Off</option>
+        <option value="octave" selected>Octave support</option>
+        <option value="fifth">Fifth above</option>
+        <option value="third">Third below</option>
+        <option value="counter">Counterline</option>
+        <option value="response">Call / response</option>
+      </select>
+    </div>
+    <div>
+      <label for="gate">Gate length: <span id="gateOut">82</span>%</label>
+      <input id="gate" type="range" min="35" max="100" value="82" />
+    </div>
+
+    <div>
+      <label for="swing">Swing: <span id="swingOut">0</span>%</label>
+      <input id="swing" type="range" min="0" max="45" value="0" />
+    </div>
+    <div>
+      <label for="seed">Seed</label>
+      <input id="seed" type="text" value="battle01" />
+    </div>
+  </div>
+
+  <h3>2. Variation controls</h3>
+  <div class="controls">
+    <div class="full">
+      <label for="changePct">Change percent: <span id="changePctOut">35</span>%</label>
+      <input id="changePct" type="range" min="0" max="100" value="35" />
+      <p class="hint">Variation mixes the existing song with a fresh song generated from the current settings. Low % keeps the melody close; high % changes more notes, bass, durations, and harmony.</p>
+    </div>
+  </div>
+
+
+  <h3>3. Upload analysis / MIDI extraction</h3>
+  <div class="controls">
+    <div class="full">
+      <label for="uploadAudio">Upload MP3/WAV/OGG to analyse</label>
+      <input id="uploadAudio" type="file" accept="audio/*" />
+      <p class="hint">The analyser estimates BPM, root, scale, mood, density, leap amount, repetition, bass motion, and chaotic/harmonic type from the audio. It also extracts a simple monophonic MIDI-like version for square-wave playback.</p>
+    </div>
+    <div>
+      <button id="analyseUploadBtn">Analyse upload</button>
+    </div>
+    <div>
+      <button id="playUploadMidiBtn">Play MIDI version of upload</button>
+    </div>
+    <div class="full checkline">
+      <input id="useUploadVariation" type="checkbox" checked />
+      <label for="useUploadVariation">Use uploaded MIDI extraction as the base when “Make variation” is pressed.</label>
+    </div>
+    <div class="full">
+      <label for="analysisText">Analysis result</label>
+      <textarea id="analysisText" class="analysisBox" readonly>Upload an audio file and press “Analyse upload”.</textarea>
+    </div>
+  </div>
+
+  <h3>4. Actions</h3>
+  <div class="row">
+    <button class="primary" id="generateBtn">Generate song</button>
+    <button id="listenBtn">Listen</button>
+    <button class="danger" id="stopBtn">Stop</button>
+    <button class="gold" id="variationBtn">Make variation</button>
+    <button id="exportJsonBtn">Export song JSON</button>
+    <button id="exportMp3Btn">Export MP3</button>
+    <button id="exportInoBtn">Export Arduino .ino</button>
+  </div>
+  <div class="status" id="status">Ready. Press “Generate song”, then “Listen”.</div>
+</section>
+
+<section>
+  <h2>Generated song</h2>
+  <div id="summary" class="small">No song yet.</div>
+  <div style="margin:12px 0">
+    <div class="meter"><div id="playMeter"></div></div>
+  </div>
+  <h3>Song data preview</h3>
+  <textarea id="songText" readonly></textarea>
+  <h3>Melody note preview</h3>
+  <div id="noteGrid" class="notegrid"></div>
+  <p class="hint"><b>MP3 export note:</b> The HTML loads the small <code>lamejs</code> encoder from a CDN. If you use the file fully offline, listening and Arduino export still work, but MP3 export needs internet or a local copy of the encoder.</p>
+</section>
+</main>
+
+<script>
+'use strict';
+
+const TICKS_PER_BEAT = 24;
+const BAR_TICKS = TICKS_PER_BEAT * 4;
+const SAMPLE_RATE = 44100;
+const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+const SCALES = {
+  minor:          [0,2,3,5,7,8,10],
+  major:          [0,2,4,5,7,9,11],
+  dorian:         [0,2,3,5,7,9,10],
+  phrygian:       [0,1,3,5,7,8,10],
+  harmonicMinor:  [0,2,3,5,7,8,11],
+  melodicMinor:   [0,2,3,5,7,9,11],
+  minorPentatonic:[0,3,5,7,10],
+  blues:          [0,3,5,6,7,10]
+};
+
+let currentSong = null;
+let currentSettings = null;
+let uploadedSong = null;
+let uploadedAnalysis = null;
+let audioCtx = null;
+let activeNodes = [];
+let playTimer = null;
+let playStartTime = 0;
+
+function $(id){ return document.getElementById(id); }
+
+function xmur3(str) {
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i++) {
+    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+    h = h << 13 | h >>> 19;
+  }
+  return function() {
+    h = Math.imul(h ^ h >>> 16, 2246822507);
+    h = Math.imul(h ^ h >>> 13, 3266489909);
+    return (h ^= h >>> 16) >>> 0;
+  };
+}
+
+function mulberry32(a) {
+  return function() {
+    let t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function makeRng(seedText) {
+  return mulberry32(xmur3(seedText)());
+}
+
+function choice(rng, arr) { return arr[Math.floor(rng() * arr.length)]; }
+function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+function chance(rng, pct){ return rng() < pct / 100; }
+
+function readSettings() {
+  return {
+    songType: $('songType').value,
+    mood: $('mood').value,
+    scale: $('scale').value,
+    root: Number($('root').value),
+    harmonyType: Number($('harmonyType').value),
+    bpm: Number($('bpm').value),
+    bars: Number($('bars').value),
+    phraseBars: Number($('phraseBars').value),
+    leadOctave: Number($('leadOctave').value),
+    density: $('density').value,
+    leap: Number($('leap').value),
+    repetition: Number($('repetition').value),
+    bassMotion: $('bassMotion').value,
+    secondVoice: $('secondVoice').value,
+    gate: Number($('gate').value) / 100,
+    swing: Number($('swing').value),
+    seed: $('seed').value.trim() || 'song'
+  };
+}
+
+function midiToFreq(midi) {
+  if (!midi) return 0;
+  return 440 * Math.pow(2, (midi - 69) / 12);
+}
+
+function midiToName(midi) {
+  if (!midi) return 'R';
+  const n = NOTE_NAMES[midi % 12];
+  const o = Math.floor(midi / 12) - 1;
+  return n + o;
+}
+
+function rootMidi(settings) {
+  return (settings.leadOctave + 1) * 12 + settings.root;
+}
+
+function degreeToMidi(degree, settings) {
+  const scale = SCALES[settings.scale];
+  const len = scale.length;
+  let oct = Math.floor(degree / len);
+  let idx = degree % len;
+  if (idx < 0) { idx += len; oct -= 1; }
+  return clamp(rootMidi(settings) + oct * 12 + scale[idx], 36, 96);
+}
+
+function durationChoices(settings) {
+  const aggressive = settings.mood === 'aggressive' || settings.mood === 'dark' || settings.songType === 'battle' || settings.songType === 'boss';
+  if (settings.density === 'sparse') return aggressive ? [12,24,24,48] : [24,24,48,48];
+  if (settings.density === 'normal') return aggressive ? [12,12,12,24] : [12,24,24,24];
+  if (settings.density === 'busy') return aggressive ? [6,12,12,12] : [12,12,12,24];
+  return aggressive ? [6,6,6,12] : [6,6,12,12];
+}
+
+
+function isMinorLike(settings) {
+  return ['minor','phrygian','harmonicMinor','melodicMinor','minorPentatonic','blues','dorian'].includes(settings.scale);
+}
+
+
+function functionalScale(settings) {
+  // The strict harmony engine uses a normal tonal scale underneath the selected color scale.
+  // Minor-like scales become minor tonality; major becomes major tonality.
+  return isMinorLike(settings) ? [0,2,3,5,7,8,10] : [0,2,4,5,7,9,11];
+}
+
+function functionalDegreeSemitone(degree, settings) {
+  const scale = functionalScale(settings);
+  const len = scale.length;
+  let oct = Math.floor(degree / len);
+  let idx = degree % len;
+  if (idx < 0) { idx += len; oct -= 1; }
+  return oct * 12 + scale[idx];
+}
+
+function functionalDegreeToMidi(degree, settings, octave=4) {
+  return clamp((octave + 1) * 12 + settings.root + functionalDegreeSemitone(degree, settings), 24, 96);
+}
+
+function chordQuality(rootDegree, settings) {
+  const deg = ((rootDegree % 7) + 7) % 7;
+  if (isMinorLike(settings)) {
+    // Classical minor convention: i and iv are minor, V is major for a strong cadence.
+    if (deg === 0 || deg === 3) return 'minor';
+    if (deg === 4 || deg === 5 || deg === 2) return 'major';
+    if (deg === 6) return 'diminished';
+    return 'minor';
+  }
+  // Major convention: I, IV, V major; ii, iii, vi minor; vii diminished.
+  if (deg === 0 || deg === 3 || deg === 4) return 'major';
+  if (deg === 6) return 'diminished';
+  return 'minor';
+}
+
+function chordIntervals(rootDegree, settings) {
+  const q = chordQuality(rootDegree, settings);
+  if (q === 'major') return [0,4,7];
+  if (q === 'diminished') return [0,3,6];
+  return [0,3,7];
+}
+
+function chordMidiTones(rootDegree, settings, low=36, high=96) {
+  const baseRoot = rootMidi(settings) + functionalDegreeSemitone(rootDegree, settings);
+  const intervals = chordIntervals(rootDegree, settings);
+  const out = [];
+  for (let shift = -48; shift <= 48; shift += 12) {
+    for (const i of intervals) {
+      const n = baseRoot + shift + i;
+      if (n >= low && n <= high) out.push(n);
+    }
+  }
+  out.sort((a,b)=>a-b);
+  return out.length ? out : [clamp(baseRoot, low, high)];
+}
+
+function scaleMidiCandidates(settings, low=36, high=96) {
+  const scale = SCALES[settings.scale];
+  const out = [];
+  for (let octave = -2; octave <= 3; octave++) {
+    for (const s of scale) {
+      const n = rootMidi(settings) + octave * 12 + s;
+      if (n >= low && n <= high) out.push(n);
+    }
+  }
+  out.sort((a,b)=>a-b);
+  return out.length ? out : [rootMidi(settings)];
+}
+
+function nearestMidi(target, candidates) {
+  return candidates.reduce((best, n) => Math.abs(n - target) < Math.abs(best - target) ? n : best, candidates[0]);
+}
+
+function weightedChordTone(rootDegree, settings, rng, target) {
+  const tones = chordMidiTones(rootDegree, settings, rootMidi(settings)-12, rootMidi(settings)+24);
+  const rootClass = ((settings.root + functionalDegreeSemitone(rootDegree, settings)) % 12 + 12) % 12;
+  const fifthClass = (rootClass + 7) % 12;
+  const rootish = tones.filter(n => n % 12 === rootClass);
+  const fifthish = tones.filter(n => n % 12 === fifthClass);
+  // Roots and fifths feel more stable, thirds add color. Weighted but still near previous line.
+  const pool = [];
+  for (const n of tones) pool.push(n);
+  for (const n of rootish) pool.push(n,n);
+  for (const n of fifthish) pool.push(n);
+  const near = nearestMidi(target, pool);
+  if (chance(rng, 65)) return near;
+  return choice(rng, pool);
+}
+
+function classicalMelodyNote(previousNote, ticksSoFar, dur, settings, rng, chordRootDegree, totalTicks) {
+  const barPos = ticksSoFar % BAR_TICKS;
+  const beatPos = ticksSoFar % TICKS_PER_BEAT;
+  const strongBeat = beatPos === 0;
+  const phraseCadence = ((ticksSoFar + dur) % (settings.phraseBars * BAR_TICKS)) === 0 || (ticksSoFar + dur) >= totalTicks;
+  const center = rootMidi(settings) + (settings.songType === 'world' || settings.mood === 'heroic' ? 7 : 0);
+
+  if (phraseCadence) {
+    // End phrases on tonic/root or stable tonic triad.
+    return weightedChordTone(0, settings, rng, previousNote || center);
+  }
+
+  if (barPos === 0) {
+    // Bar starts should clearly state the harmony.
+    return weightedChordTone(chordRootDegree, settings, rng, previousNote || center);
+  }
+
+  if (strongBeat) {
+    // Every beat is harmonically safe in strict mode.
+    return weightedChordTone(chordRootDegree, settings, rng, previousNote || center);
+  }
+
+  // Weak positions may use stepwise passing tones, but stay close to the line.
+  const scaleNotes = scaleMidiCandidates(settings, center - 18, center + 18);
+  const idx = scaleNotes.indexOf(nearestMidi(previousNote || center, scaleNotes));
+  const passing = [];
+  for (const off of [-2,-1,1,2]) {
+    const n = scaleNotes[clamp(idx + off, 0, scaleNotes.length - 1)];
+    if (n) passing.push(n);
+  }
+  const chordSafe = chordMidiTones(chordRootDegree, settings, center - 18, center + 18);
+  if (chance(rng, 70) && passing.length) return choice(rng, passing);
+  return nearestMidi(previousNote || center, chordSafe);
+}
+
+function chordDegreePlan(settings, rng) {
+  // Scale-degree roots. In functional terms these behave like:
+  // 0 = tonic, 3 = subdominant/predominant, 4 = dominant, 5 = submediant.
+  const minorPlans = [
+    [0,3,4,0],       // i - iv - V - i
+    [0,5,3,4],       // i - VI - iv - V
+    [0,2,3,4],       // i - III - iv - V
+    [0,3,0,4]        // i - iv - i - V
+  ];
+  const majorPlans = [
+    [0,3,4,0],       // I - IV - V - I
+    [0,5,1,4],       // I - vi - ii - V
+    [0,4,5,3],       // I - V - vi - IV
+    [0,1,4,0]        // I - ii - V - I
+  ];
+  const plans = isMinorLike(settings) ? minorPlans : majorPlans;
+  return choice(rng, plans).slice();
+}
+
+function chordRootForTick(ticksSoFar, settings, chordPlan, rng) {
+  const bar = Math.floor(ticksSoFar / BAR_TICKS);
+  const chaos = settings.harmonyType / 100;
+  let rootDegree = chordPlan[bar % chordPlan.length];
+  if (chance(rng, chaos * 38)) rootDegree = Math.floor(rng() * 12) - 3;
+  return rootDegree;
+}
+
+function chordToneDegrees(rootDegree) {
+  return [rootDegree, rootDegree + 2, rootDegree + 4];
+}
+
+function bassMidiFromDegree(rootDegree, settings, octave=2) {
+  // For harmonic settings, the bass must belong to the functional chord plan.
+  // This prevents "random scale degree bass" at Type = 0%.
+  if (settings.harmonyType <= 50) return clamp(functionalDegreeToMidi(rootDegree, settings, octave), 36, 60);
+
+  const scale = SCALES[settings.scale];
+  const len = scale.length;
+  let oct = Math.floor(rootDegree / len);
+  let idx = rootDegree % len;
+  if (idx < 0) { idx += len; oct -= 1; }
+  return clamp((octave + 1) * 12 + settings.root + oct * 12 + scale[idx], 36, 60);
+}
+
+function randomChromaticMidi(rng, low, high) {
+  return low + Math.floor(rng() * (high - low + 1));
+}
+
+function makeBassNote(eventIndex, ticksSoFar, settings, rng, chordRootDegree=0) {
+  const root = bassMidiFromDegree(chordRootDegree, settings, 2);
+  const chaos = settings.harmonyType / 100;
+  if (chance(rng, chaos * 32)) return randomChromaticMidi(rng, 36, 55);
+
+  const barPos = ticksSoFar % BAR_TICKS;
+  const beat = Math.floor(barPos / TICKS_PER_BEAT);
+  const fifth = clamp(root + 7, 36, 60);
+  const third = clamp(root + (isMinorLike(settings) ? 3 : 4), 36, 60);
+  const fourth = clamp(root + 5, 36, 60);
+  const flatSeven = clamp(root + 10, 36, 60);
+
+  switch(settings.bassMotion) {
+    case 'pedal': return root;
+    case 'drone': return eventIndex % 16 < 12 ? root : clamp(root - 12, 36, 60);
+    case 'rootFifth': return (beat % 2 === 0) ? root : fifth;
+    case 'walking': return [root, third, fourth, fifth, flatSeven, fifth, fourth, third][eventIndex % 8];
+    case 'arpeggio': return [root, third, fifth, clamp(root + 12, 36, 60)][eventIndex % 4];
+    case 'octave': return [root, clamp(root + 12, 36, 60), fifth, clamp(root + 12, 36, 60)][eventIndex % 4];
+    default: return root;
+  }
+}
+
+function makeHarmony(note, previousNote, eventIndex, settings, chordRootDegree=0, rng=Math.random) {
+  if (!note || settings.secondVoice === 'off') return 0;
+  const chaos = settings.harmonyType / 100;
+  const strict = settings.harmonyType <= 5;
+
+  // At chaotic settings, sometimes ignore functional harmony and use unstable intervals.
+  if (!strict && chance(rng, chaos * 45)) {
+    const dissonant = choice(rng, [-13,-11,-6,-1,1,6,10,11,13]);
+    return clamp(note + dissonant, 36, 96);
+  }
+
+  // In classical mode the second square voice is not an arbitrary interval above the melody.
+  // It is the nearest chord tone below the melody, which sounds much more stable on 8-bit hardware.
+  const tonesBelow = chordMidiTones(chordRootDegree, settings, 36, note - 3);
+  let chordSupport = nearestMidi(note - 12, tonesBelow.length ? tonesBelow : chordMidiTones(chordRootDegree, settings, 36, 96));
+  chordSupport = clamp(chordSupport, 36, 96);
+
+  if (strict) {
+    if (settings.secondVoice === 'octave') return eventIndex % 4 === 0 ? clamp(note - 12, 36, 96) : 0;
+    return eventIndex % 2 === 0 ? chordSupport : 0;
+  }
+
+  if (settings.secondVoice === 'octave') return eventIndex % 4 === 0 ? clamp(note - 12, 36, 96) : 0;
+  if (settings.secondVoice === 'fifth') return eventIndex % 2 === 0 ? chordSupport : nearestMidi(note - 7, tonesBelow);
+  if (settings.secondVoice === 'third') return eventIndex % 2 === 0 ? chordSupport : 0;
+  if (settings.secondVoice === 'response') return eventIndex % 4 >= 2 ? chordSupport : 0;
+  if (settings.secondVoice === 'counter') {
+    const center = rootMidi(settings) + 7;
+    const mirrored = center - (note - center);
+    return nearestMidi(mirrored - 12, chordMidiTones(chordRootDegree, settings, 36, 96));
+  }
+  return chordSupport;
+}
+
+function defaultBias(settings) {
+  let base = { startDegree: 0, minDegree: -2, maxDegree: 12, upward: 0.50, repeatAttack: 10 };
+  if (settings.songType === 'battle') base = { startDegree: 0, minDegree: -1, maxDegree: 14, upward: 0.56, repeatAttack: 28 };
+  if (settings.songType === 'boss') base = { startDegree: 0, minDegree: -2, maxDegree: 16, upward: 0.58, repeatAttack: 34 };
+  if (settings.songType === 'world') base = { startDegree: 0, minDegree: -1, maxDegree: 16, upward: 0.62, repeatAttack: 8 };
+  if (settings.songType === 'dungeon') base = { startDegree: 0, minDegree: -4, maxDegree: 8, upward: 0.43, repeatAttack: 18 };
+  if (settings.songType === 'town') base = { startDegree: 0, minDegree: -1, maxDegree: 10, upward: 0.50, repeatAttack: 4 };
+
+  if (settings.mood === 'aggressive') { base.repeatAttack += 18; base.upward += 0.04; }
+  if (settings.mood === 'relaxed') { base.repeatAttack -= 5; base.upward -= 0.02; }
+  if (settings.mood === 'dark' || settings.mood === 'mysterious') { base.upward -= 0.08; base.maxDegree -= 2; }
+  if (settings.mood === 'heroic') { base.upward += 0.08; base.maxDegree += 2; }
+  return base;
+}
+
+function generateSong(settings, seedSuffix='') {
+  const rng = makeRng(settings.seed + '|' + JSON.stringify(settings) + '|' + seedSuffix);
+  const totalTicks = settings.bars * BAR_TICKS;
+  const phraseTicks = settings.phraseBars * BAR_TICKS;
+  const dChoices = durationChoices(settings);
+  const bias = defaultBias(settings);
+  const chordPlan = chordDegreePlan(settings, rng);
+  const classicalStrength = 1 - settings.harmonyType / 100;
+  let ticks = 0;
+  let degree = bias.startDegree;
+  let eventIndex = 0;
+  let previousNote = functionalDegreeToMidi(0, settings, settings.leadOctave);
+  const events = [];
+  const phraseMemory = [];
+
+  while (ticks < totalTicks && events.length < 768) {
+    const phrasePos = ticks % phraseTicks;
+    const shouldCopyPhrase = phraseMemory.length > 0 && phrasePos < 12 && chance(rng, settings.repetition * (1 - classicalStrength * 0.35));
+
+    if (shouldCopyPhrase) {
+      const transpose = choice(rng, [0,0,0,1,-1,2,-2]);
+      for (const pe of phraseMemory) {
+        if (ticks >= totalTicks) break;
+        const dur = Math.min(pe.dur, totalTicks - ticks);
+        const chordRootDegree = chordRootForTick(ticks, settings, chordPlan, rng);
+        let note = clamp(pe.note + transpose, 36, 96);
+
+        // In strict harmonic mode, do not let copied phrases fight the current chord.
+        if (chance(rng, classicalStrength * 100)) {
+          note = classicalMelodyNote(previousNote, ticks, dur, settings, rng, chordRootDegree, totalTicks);
+        }
+        if (chance(rng, settings.harmonyType * 0.25)) note = randomChromaticMidi(rng, 48, 88);
+
+        const bass = makeBassNote(eventIndex, ticks, settings, rng, chordRootDegree);
+        const harmony = makeHarmony(note, previousNote, eventIndex, settings, chordRootDegree, rng);
+        events.push({note, dur, bass, harmony});
+        previousNote = note;
+        ticks += dur;
+        eventIndex++;
+      }
+      continue;
+    }
+
+    let dur = choice(rng, dChoices);
+    if (ticks + dur > totalTicks) dur = totalTicks - ticks;
+
+    const attackRepeat = chance(rng, bias.repeatAttack);
+    if (attackRepeat) {
+      degree = bias.startDegree + choice(rng, [0,0,0,2,4,-1]);
+    } else if (chance(rng, settings.leap * (1 - classicalStrength * 0.65))) {
+      const leapChoices = settings.mood === 'aggressive' ? [-5,-4,-3,3,4,5,6] : [-4,-3,3,4,5];
+      degree += choice(rng, leapChoices);
+    } else {
+      degree += chance(rng, bias.upward * 100) ? choice(rng, [0,1,1,2]) : choice(rng, [-2,-1,-1,0]);
+    }
+
+    degree = clamp(degree, bias.minDegree, bias.maxDegree);
+
+    const chordRootDegree = chordRootForTick(ticks, settings, chordPlan, rng);
+    let note = degreeToMidi(degree, settings);
+
+    // Big fix: at 0% Type, the melody is generated from the current chord first.
+    // Strong beats become chord tones; weak notes become safe passing tones.
+    if (chance(rng, classicalStrength * 100)) {
+      note = classicalMelodyNote(previousNote, ticks, dur, settings, rng, chordRootDegree, totalTicks);
+    }
+
+    // Chaotic side may still override the result.
+    if (chance(rng, settings.harmonyType * 0.35)) {
+      note = randomChromaticMidi(rng, 48, 88);
+    }
+
+    const bass = makeBassNote(eventIndex, ticks, settings, rng, chordRootDegree);
+    const harmony = makeHarmony(note, previousNote, eventIndex, settings, chordRootDegree, rng);
+
+    const ev = { note, dur, bass, harmony };
+    events.push(ev);
+    if (ticks < phraseTicks) phraseMemory.push(ev);
+
+    previousNote = note;
+    ticks += dur;
+    eventIndex++;
+  }
+
+  return {
+    settings: {...settings},
+    events,
+    created: new Date().toISOString(),
+    name: makeSongName(settings)
+  };
+}
+
+function makeSongName(settings) {
+  const type = settings.songType[0].toUpperCase() + settings.songType.slice(1);
+  const mood = settings.mood[0].toUpperCase() + settings.mood.slice(1);
+  const root = NOTE_NAMES[settings.root];
+  return `${type}_${mood}_${root}_${settings.scale}_${settings.bpm}bpm`;
+}
+
+function makeVariation(oldSong, settings, pct) {
+  if (!oldSong) return generateSong(settings, 'new');
+  const rng = makeRng(settings.seed + '|variation|' + Date.now());
+  const fresh = generateSong(settings, 'variationTarget');
+  const maxLen = Math.max(oldSong.events.length, fresh.events.length);
+  const events = [];
+
+  for (let i = 0; i < maxLen; i++) {
+    const oldEv = oldSong.events[i % oldSong.events.length];
+    const newEv = fresh.events[i % fresh.events.length];
+    let ev = chance(rng, pct) ? {...newEv} : {...oldEv};
+
+    // At mid change %, sometimes combine duration from one and pitch from the other.
+    if (pct > 10 && pct < 90 && chance(rng, pct / 2)) {
+      ev = {
+        note: chance(rng, pct) ? newEv.note : oldEv.note,
+        dur: chance(rng, pct) ? newEv.dur : oldEv.dur,
+        bass: chance(rng, pct) ? newEv.bass : oldEv.bass,
+        harmony: chance(rng, pct) ? newEv.harmony : oldEv.harmony
+      };
+    }
+    events.push(ev);
+  }
+
+  // Trim or extend to current bar length.
+  const totalTicks = settings.bars * BAR_TICKS;
+  let sum = 0;
+  const trimmed = [];
+  for (const ev of events) {
+    if (sum >= totalTicks) break;
+    const dur = Math.min(ev.dur, totalTicks - sum);
+    trimmed.push({...ev, dur});
+    sum += dur;
+  }
+
+  return {
+    settings: {...settings},
+    events: trimmed,
+    created: new Date().toISOString(),
+    name: makeSongName(settings) + '_variation_' + pct + 'pct'
+  };
+}
+
+
+// -------------------------
+// Upload analysis functions
+// -------------------------
+function setControlValue(id, value) {
+  const el = $(id);
+  if (!el) return;
+  el.value = String(value);
+  el.dispatchEvent(new Event('input'));
+  el.dispatchEvent(new Event('change'));
+}
+
+function nearestOptionValue(id, value, options) {
+  let best = options[0], bestDist = Infinity;
+  for (const o of options) {
+    const d = Math.abs(o - value);
+    if (d < bestDist) { bestDist = d; best = o; }
+  }
+  return best;
+}
+
+function applyAnalysedSettings(settings) {
+  setControlValue('songType', settings.songType);
+  setControlValue('mood', settings.mood);
+  setControlValue('scale', settings.scale);
+  setControlValue('root', settings.root);
+  setControlValue('harmonyType', settings.harmonyType);
+  setControlValue('bpm', settings.bpm);
+  setControlValue('bars', nearestOptionValue('bars', settings.bars, [4,8,12,16,24,32]));
+  setControlValue('phraseBars', nearestOptionValue('phraseBars', settings.phraseBars, [1,2,4,8]));
+  setControlValue('leadOctave', settings.leadOctave);
+  setControlValue('density', settings.density);
+  setControlValue('leap', settings.leap);
+  setControlValue('repetition', settings.repetition);
+  setControlValue('bassMotion', settings.bassMotion);
+  setControlValue('secondVoice', settings.secondVoice);
+  setControlValue('gate', Math.round(settings.gate * 100));
+  setControlValue('swing', settings.swing);
+  setControlValue('seed', settings.seed);
+}
+
+function audioBufferToMono(buffer) {
+  const len = buffer.length;
+  const ch = buffer.numberOfChannels;
+  const mono = new Float32Array(len);
+  for (let c = 0; c < ch; c++) {
+    const data = buffer.getChannelData(c);
+    for (let i = 0; i < len; i++) mono[i] += data[i] / ch;
+  }
+  return mono;
+}
+
+function rmsOfRange(data, start, end) {
+  let sum = 0, n = 0;
+  start = Math.max(0, start|0); end = Math.min(data.length, end|0);
+  for (let i = start; i < end; i += 2) { const v = data[i]; sum += v*v; n++; }
+  return n ? Math.sqrt(sum / n) : 0;
+}
+
+function findAudioStart(data, sr) {
+  const frame = Math.floor(sr * 0.02);
+  let peak = 0;
+  for (let i = 0; i < Math.min(data.length, sr * 10); i += frame) peak = Math.max(peak, rmsOfRange(data, i, i + frame));
+  const threshold = peak * 0.08;
+  for (let i = 0; i < data.length; i += frame) {
+    if (rmsOfRange(data, i, i + frame) > threshold) return i;
+  }
+  return 0;
+}
+
+function estimateBpmFromAudio(data, sr) {
+  const maxSamples = Math.min(data.length, sr * 90);
+  const hop = 1024;
+  const frame = 2048;
+  const env = [];
+  for (let pos = 0; pos + frame < maxSamples; pos += hop) env.push(rmsOfRange(data, pos, pos + frame));
+  if (env.length < 16) return Number($('bpm').value) || 120;
+
+  const nov = new Float32Array(env.length);
+  for (let i = 1; i < env.length; i++) nov[i] = Math.max(0, env[i] - env[i-1]);
+  let mean = 0;
+  for (const v of nov) mean += v;
+  mean /= nov.length;
+  for (let i = 0; i < nov.length; i++) nov[i] = Math.max(0, nov[i] - mean * 0.65);
+
+  let bestBpm = 120, bestScore = -1;
+  const scoreAt = (bpm) => {
+    const lag = Math.round((60 / bpm) * sr / hop);
+    if (lag < 2 || lag >= nov.length / 2) return 0;
+    let score = 0, n = 0;
+    for (let i = lag; i < nov.length; i++) { score += nov[i] * nov[i-lag]; n++; }
+    return n ? score / n : 0;
+  };
+  for (let bpm = 70; bpm <= 220; bpm++) {
+    const score = scoreAt(bpm);
+    if (score > bestScore) { bestScore = score; bestBpm = bpm; }
+  }
+  // Prefer musically plausible double-time battle tempos when close.
+  if (bestBpm < 110 && bestBpm * 2 <= 220 && scoreAt(bestBpm * 2) > bestScore * 0.72) bestBpm *= 2;
+  if (bestBpm > 190 && scoreAt(Math.round(bestBpm / 2)) > bestScore * 0.92) bestBpm = Math.round(bestBpm / 2);
+  return clamp(Math.round(bestBpm), 70, 220);
+}
+
+function estimatePitchAuto(segment, sr, minFreq, maxFreq, emphasizeHigh=false) {
+  const N = Math.min(segment.length, 10000);
+  if (N < 256) return 0;
+  const offset = Math.max(0, Math.floor((segment.length - N) / 2));
+  const step = N > 5000 ? 2 : 1;
+  let mean = 0, count = 0;
+  for (let i = 0; i < N; i += step) { mean += segment[offset + i]; count++; }
+  mean /= Math.max(1, count);
+
+  const lagMin = Math.max(2, Math.floor(sr / maxFreq));
+  const lagMax = Math.min(Math.floor(sr / minFreq), Math.floor(N / 2));
+  let bestLag = 0, bestScore = 0;
+
+  for (let lag = lagMin; lag <= lagMax; lag++) {
+    let sum = 0, e1 = 0, e2 = 0, samples = 0;
+    for (let i = 1; i + lag < N; i += step) {
+      let a = segment[offset + i] - mean;
+      let b = segment[offset + i + lag] - mean;
+      if (emphasizeHigh) {
+        a -= (segment[offset + i - 1] - mean);
+        b -= (segment[offset + i + lag - 1] - mean);
+      }
+      sum += a * b;
+      e1 += a * a;
+      e2 += b * b;
+      samples++;
+    }
+    const score = sum / (Math.sqrt(e1 * e2) + 1e-9);
+    if (score > bestScore) { bestScore = score; bestLag = lag; }
+  }
+
+  if (bestScore < 0.22 || bestLag <= 0) return 0;
+  return sr / bestLag;
+}
+
+function freqToMidi(freq) {
+  if (!freq || freq <= 0) return 0;
+  return clamp(Math.round(69 + 12 * Math.log2(freq / 440)), 24, 96);
+}
+
+function scaleFitFor(root, scaleName, hist) {
+  const scale = SCALES[scaleName];
+  const inSet = new Set(scale.map(x => (x + root) % 12));
+  let inside = 0, outside = 0;
+  for (let pc = 0; pc < 12; pc++) {
+    if (inSet.has(pc)) inside += hist[pc]; else outside += hist[pc];
+  }
+  const tonic = hist[root] || 0;
+  const fifth = hist[(root + 7) % 12] || 0;
+  const thirdMinor = hist[(root + 3) % 12] || 0;
+  const thirdMajor = hist[(root + 4) % 12] || 0;
+  return inside * 1.4 - outside * 0.9 + tonic * 0.5 + fifth * 0.25 + (scaleName.includes('minor') || scaleName === 'dorian' || scaleName === 'phrygian' || scaleName === 'blues' ? thirdMinor : thirdMajor) * 0.2;
+}
+
+function estimateScaleAndRoot(midiNotes, bassNotes) {
+  const hist = new Array(12).fill(0);
+  for (const n of midiNotes) if (n) hist[n % 12] += 1;
+  for (const b of bassNotes) if (b) hist[b % 12] += 1.8;
+  let best = {root: 0, scale: 'minor', score: -Infinity, outsideRatio: 0};
+  for (let root = 0; root < 12; root++) {
+    for (const scale of Object.keys(SCALES)) {
+      const score = scaleFitFor(root, scale, hist);
+      if (score > best.score) best = {root, scale, score, outsideRatio: 0};
+    }
+  }
+  const inSet = new Set(SCALES[best.scale].map(x => (x + best.root) % 12));
+  let inside = 0, outside = 0;
+  for (let pc = 0; pc < 12; pc++) {
+    if (inSet.has(pc)) inside += hist[pc]; else outside += hist[pc];
+  }
+  best.outsideRatio = outside / Math.max(1e-9, inside + outside);
+  return best;
+}
+
+function inferMoodAndType(bpm, scaleName, density, avgLeap, energy) {
+  const minorish = ['minor','phrygian','harmonicMinor','melodicMinor','minorPentatonic','blues','dorian'].includes(scaleName);
+  let mood = minorish ? 'dark' : 'heroic';
+  let songType = 'world';
+  if (bpm >= 175 && avgLeap >= 3.8) { mood = minorish ? 'aggressive' : 'heroic'; songType = bpm >= 190 ? 'boss' : 'battle'; }
+  else if (bpm >= 150) { mood = minorish ? 'aggressive' : 'heroic'; songType = 'battle'; }
+  else if (bpm <= 105 && minorish) { mood = 'mysterious'; songType = 'dungeon'; }
+  else if (bpm <= 112 && !minorish) { mood = 'relaxed'; songType = 'town'; }
+  else if (minorish && bpm < 125) { mood = 'sad'; songType = 'dungeon'; }
+  if (density === 'manic' && bpm > 170) songType = 'boss';
+  return {mood, songType};
+}
+
+function inferBassMotion(bassEvents) {
+  const notes = bassEvents.filter(Boolean);
+  if (notes.length < 4) return 'pedal';
+  const unique = new Set(notes.map(n => n % 12));
+  const rootPc = notes[0] % 12;
+  const rootCount = notes.filter(n => n % 12 === rootPc).length;
+  const fifthCount = notes.filter(n => n % 12 === (rootPc + 7) % 12).length;
+  const sameRatio = rootCount / notes.length;
+  let stepMoves = 0, bigOct = 0;
+  for (let i = 1; i < notes.length; i++) {
+    const d = Math.abs(notes[i] - notes[i-1]);
+    if (d <= 2) stepMoves++;
+    if (d >= 10) bigOct++;
+  }
+  if (sameRatio > 0.75) return 'drone';
+  if ((rootCount + fifthCount) / notes.length > 0.65) return 'rootFifth';
+  if (bigOct / Math.max(1, notes.length - 1) > 0.35) return 'octave';
+  if (stepMoves / Math.max(1, notes.length - 1) > 0.50) return 'walking';
+  if (unique.size >= 4) return 'arpeggio';
+  return 'pedal';
+}
+
+function inferRepetitionPct(notes) {
+  const arr = notes.filter(Boolean);
+  if (arr.length < 8) return 30;
+  const grams = new Map();
+  for (let i = 0; i + 3 < arr.length; i++) {
+    const key = arr.slice(i, i+4).join(',');
+    grams.set(key, (grams.get(key) || 0) + 1);
+  }
+  let repeated = 0;
+  for (const v of grams.values()) if (v > 1) repeated += v;
+  return clamp(Math.round((repeated / Math.max(1, arr.length)) * 130), 5, 95);
+}
+
+function buildUploadedSongFromAudio(mono, sr, bpm, baseSettings) {
+  const start = findAudioStart(mono, sr);
+  const beatSec = 60 / bpm;
+  const stepTicks = 12; // eighth-note grid, compact and Arduino-friendly
+  const stepSec = beatSec * (stepTicks / TICKS_PER_BEAT);
+  const maxBars = 32;
+  const maxSec = maxBars * 4 * beatSec;
+  const endSample = Math.min(mono.length, start + Math.floor(maxSec * sr));
+  const usableSec = Math.max(0.1, (endSample - start) / sr);
+  const steps = clamp(Math.floor(usableSec / stepSec), 8, 512);
+
+  const rmsValues = [];
+  for (let i = 0; i < steps; i++) {
+    const a = start + Math.floor(i * stepSec * sr);
+    const b = start + Math.floor((i + 1) * stepSec * sr);
+    rmsValues.push(rmsOfRange(mono, a, b));
+  }
+  const sorted = [...rmsValues].sort((a,b)=>a-b);
+  const silenceThreshold = sorted[Math.floor(sorted.length * 0.20)] * 1.35;
+
+  const rawNotes = [], rawBass = [];
+  for (let i = 0; i < steps; i++) {
+    const a = start + Math.floor(i * stepSec * sr);
+    const b = Math.min(endSample, start + Math.floor((i + 1) * stepSec * sr));
+    const seg = mono.subarray(a, b);
+    const rms = rmsValues[i];
+    if (rms < silenceThreshold * 0.55) {
+      rawNotes.push(0); rawBass.push(0); continue;
+    }
+    const leadHz = estimatePitchAuto(seg, sr, 120, 1250, true);
+    const bassHz = estimatePitchAuto(seg, sr, 55, 260, false);
+    let note = freqToMidi(leadHz);
+    let bass = freqToMidi(bassHz);
+    if (note && bass && Math.abs(note - bass) < 7 && note < 55) note += 12;
+    if (note && note < 48) note += 12;
+    if (note && note > 90) note -= 12;
+    if (bass && bass > 60) bass -= 12;
+    rawNotes.push(note);
+    rawBass.push(bass);
+  }
+
+  const scaleInfo = estimateScaleAndRoot(rawNotes, rawBass);
+  const nonRest = rawNotes.filter(Boolean);
+  let leapSum = 0, leapCount = 0;
+  for (let i = 1; i < nonRest.length; i++) {
+    leapSum += Math.abs(nonRest[i] - nonRest[i-1]);
+    leapCount++;
+  }
+  const avgLeap = leapCount ? leapSum / leapCount : 0;
+  const estimatedBars = clamp(Math.round(steps * stepTicks / BAR_TICKS), 4, 32);
+  const eventsPerBar = nonRest.length / Math.max(1, estimatedBars);
+  const density = eventsPerBar < 4 ? 'sparse' : eventsPerBar < 8 ? 'normal' : eventsPerBar < 13 ? 'busy' : 'manic';
+  const mt = inferMoodAndType(bpm, scaleInfo.scale, density, avgLeap, 0);
+  const harmonyType = clamp(Math.round(scaleInfo.outsideRatio * 220 + Math.max(0, avgLeap - 5) * 4), 0, 100);
+
+  const analysedSettings = {
+    ...baseSettings,
+    songType: mt.songType,
+    mood: mt.mood,
+    scale: scaleInfo.scale,
+    root: scaleInfo.root,
+    harmonyType,
+    bpm,
+    bars: nearestOptionValue('bars', estimatedBars, [4,8,12,16,24,32]),
+    phraseBars: estimatedBars >= 16 ? 4 : 2,
+    leadOctave: Math.round(clamp((nonRest.reduce((a,b)=>a+b,0) / Math.max(1, nonRest.length)) / 12 - 1, 3, 6)),
+    density,
+    leap: clamp(Math.round(avgLeap * 9), 0, 100),
+    repetition: inferRepetitionPct(rawNotes),
+    bassMotion: inferBassMotion(rawBass),
+    secondVoice: 'octave',
+    gate: 0.82,
+    swing: 0,
+    seed: 'upload_' + Date.now().toString(36)
+  };
+
+  const rng = makeRng(analysedSettings.seed + '|uploadHarmony');
+  const events = [];
+  let previousNote = 0;
+  let hold = null;
+  for (let i = 0; i < rawNotes.length; i++) {
+    const note = rawNotes[i] || 0;
+    const bass = rawBass[i] || 0;
+    if (hold && hold.note === note && hold.bass === bass && hold.dur + stepTicks <= 240) {
+      hold.dur += stepTicks;
+    } else {
+      if (hold) events.push(hold);
+      const ticksSoFar = i * stepTicks;
+      const chordPlan = chordDegreePlan(analysedSettings, rng);
+      const chordRootDegree = chordRootForTick(ticksSoFar, analysedSettings, chordPlan, rng);
+      const safeBass = bass || makeBassNote(i, ticksSoFar, analysedSettings, rng, chordRootDegree);
+      const harmony = note ? makeHarmony(note, previousNote, i, analysedSettings, chordRootDegree, rng) : 0;
+      hold = { note, dur: stepTicks, bass: safeBass, harmony };
+      if (note) previousNote = note;
+    }
+  }
+  if (hold) events.push(hold);
+
+  return {
+    settings: analysedSettings,
+    events: events.slice(0, 384),
+    created: new Date().toISOString(),
+    name: 'Uploaded_MIDI_' + NOTE_NAMES[analysedSettings.root] + '_' + analysedSettings.scale + '_' + analysedSettings.bpm + 'bpm',
+    analysis: {
+      bpm,
+      root: NOTE_NAMES[scaleInfo.root],
+      scale: scaleInfo.scale,
+      mood: analysedSettings.mood,
+      songType: analysedSettings.songType,
+      density,
+      leapPercent: analysedSettings.leap,
+      repetitionPercent: analysedSettings.repetition,
+      harmonyType,
+      bassMotion: analysedSettings.bassMotion,
+      noteCount: events.length,
+      analysedSeconds: usableSec.toFixed(1),
+      outsideScaleRatio: scaleInfo.outsideRatio.toFixed(3)
+    }
+  };
+}
+
+async function analyseUploadedAudio() {
+  const input = $('uploadAudio');
+  const file = input && input.files && input.files[0];
+  if (!file) { setStatus('Choose an MP3/WAV/OGG file first.', true); return; }
+  setStatus('Decoding and analysing upload...');
+  $('analysisText').value = 'Analysing ' + file.name + ' ...';
+
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const arr = await file.arrayBuffer();
+    const buf = await audioCtx.decodeAudioData(arr.slice(0));
+    const mono = audioBufferToMono(buf);
+    const bpm = estimateBpmFromAudio(mono, buf.sampleRate);
+    const base = readSettings();
+    uploadedSong = buildUploadedSongFromAudio(mono, buf.sampleRate, bpm, base);
+    uploadedAnalysis = uploadedSong.analysis;
+    applyAnalysedSettings(uploadedSong.settings);
+    currentSettings = readSettings();
+    currentSong = uploadedSong;
+    updatePreview(currentSong);
+    $('analysisText').value = JSON.stringify(uploadedAnalysis, null, 2);
+    setStatus('Upload analysed. Parameters were copied to the controls. Press “Play MIDI version of upload” or “Make variation”.');
+  } catch (err) {
+    console.error(err);
+    setStatus('Could not analyse this audio file: ' + err.message, true);
+    $('analysisText').value = 'Analysis failed: ' + err.message;
+  }
+}
+
+function playUploadedMidi() {
+  if (!uploadedSong) { setStatus('Analyse an uploaded audio file first.', true); return; }
+  playSong(uploadedSong);
+}
+
+function stopAudio() {
+  for (const n of activeNodes) {
+    try { n.stop(); } catch(e) {}
+    try { n.disconnect(); } catch(e) {}
+  }
+  activeNodes = [];
+  if (playTimer) clearInterval(playTimer);
+  playTimer = null;
+  $('playMeter').style.width = '0%';
+}
+
+function scheduleOsc(ctx, type, freq, start, dur, volume, gate) {
+  if (!freq || dur <= 0) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, start);
+  gain.gain.setValueAtTime(0, start);
+  const attack = Math.min(0.006, dur * 0.1);
+  const release = Math.min(0.025, dur * 0.2);
+  const toneDur = dur * gate;
+  gain.gain.linearRampToValueAtTime(volume, start + attack);
+  gain.gain.setValueAtTime(volume, start + Math.max(attack, toneDur - release));
+  gain.gain.linearRampToValueAtTime(0, start + toneDur);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(start);
+  osc.stop(start + toneDur + 0.01);
+  activeNodes.push(osc);
+}
+
+function playSong(song) {
+  if (!song) return;
+  stopAudio();
+  audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+  const ctx = audioCtx;
+  const s = song.settings;
+  const beatSec = 60 / s.bpm;
+  let t = ctx.currentTime + 0.08;
+  const startTime = t;
+  let eventCounter = 0;
+
+  for (const ev of song.events) {
+    let dur = (ev.dur / TICKS_PER_BEAT) * beatSec;
+    if (s.swing > 0 && ev.dur <= 12) {
+      const swingAmt = s.swing / 100;
+      if (eventCounter % 2 === 0) dur *= (1 + swingAmt * 0.45);
+      else dur *= (1 - swingAmt * 0.45);
+    }
+    scheduleOsc(ctx, 'square', midiToFreq(ev.note), t, dur, 0.13, s.gate);
+    scheduleOsc(ctx, 'square', midiToFreq(ev.harmony), t, dur, 0.08, s.gate * 0.95);
+    scheduleOsc(ctx, 'triangle', midiToFreq(ev.bass), t, dur, 0.16, Math.min(0.98, s.gate + 0.08));
+    t += dur;
+    eventCounter++;
+  }
+
+  const total = t - startTime;
+  playStartTime = performance.now();
+  playTimer = setInterval(() => {
+    const elapsed = (performance.now() - playStartTime) / 1000;
+    const pct = clamp((elapsed / total) * 100, 0, 100);
+    $('playMeter').style.width = pct + '%';
+    if (pct >= 100) clearInterval(playTimer);
+  }, 50);
+
+  $('status').textContent = 'Playing: ' + song.name;
+}
+
+function squareSample(phase){ return phase < 0.5 ? 1 : -1; }
+function triangleSample(phase){ return 4 * Math.abs(phase - 0.5) - 1; }
+
+function renderPcm(song) {
+  const s = song.settings;
+  const beatSec = 60 / s.bpm;
+  let totalSec = 0;
+  for (const ev of song.events) totalSec += (ev.dur / TICKS_PER_BEAT) * beatSec;
+  const totalSamples = Math.ceil(totalSec * SAMPLE_RATE) + SAMPLE_RATE * 0.05;
+  const pcm = new Float32Array(totalSamples);
+  let pos = 0;
+  let eventCounter = 0;
+
+  for (const ev of song.events) {
+    let durSec = (ev.dur / TICKS_PER_BEAT) * beatSec;
+    if (s.swing > 0 && ev.dur <= 12) {
+      const swingAmt = s.swing / 100;
+      if (eventCounter % 2 === 0) durSec *= (1 + swingAmt * 0.45);
+      else durSec *= (1 - swingAmt * 0.45);
+    }
+    const n = Math.floor(durSec * SAMPLE_RATE);
+    const gateSamples = Math.floor(n * s.gate);
+    const fA = midiToFreq(ev.note);
+    const fB = midiToFreq(ev.harmony);
+    const fBass = midiToFreq(ev.bass);
+
+    for (let i = 0; i < n && pos + i < pcm.length; i++) {
+      const inGate = i < gateSamples;
+      let amp = inGate ? 1 : 0;
+      const atk = Math.max(1, Math.floor(0.004 * SAMPLE_RATE));
+      const rel = Math.max(1, Math.floor(0.012 * SAMPLE_RATE));
+      if (i < atk) amp *= i / atk;
+      if (inGate && gateSamples - i < rel) amp *= Math.max(0, (gateSamples - i) / rel);
+
+      const tt = i / SAMPLE_RATE;
+      let v = 0;
+      if (fA) v += 0.38 * squareSample((tt * fA) % 1);
+      if (fB) v += 0.22 * squareSample((tt * fB) % 1);
+      if (fBass) v += 0.34 * triangleSample((tt * fBass) % 1);
+      pcm[pos + i] += v * amp;
+    }
+    pos += n;
+    eventCounter++;
+  }
+
+  let peak = 0;
+  for (let i = 0; i < pcm.length; i++) peak = Math.max(peak, Math.abs(pcm[i]));
+  const scale = peak > 0 ? 0.92 / peak : 1;
+  for (let i = 0; i < pcm.length; i++) pcm[i] *= scale;
+  return pcm;
+}
+
+function floatTo16BitPCM(float32) {
+  const out = new Int16Array(float32.length);
+  for (let i = 0; i < float32.length; i++) {
+    const s = clamp(float32[i], -1, 1);
+    out[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+  }
+  return out;
+}
+
+function exportMp3(song) {
+  if (!song) { setStatus('Generate a song first.', true); return; }
+  if (typeof lamejs === 'undefined') {
+    setStatus('MP3 encoder not loaded. Internet/CDN is needed for MP3 export, or add lamejs locally.', true);
+    return;
+  }
+  setStatus('Rendering MP3...');
+  setTimeout(() => {
+    const pcm = renderPcm(song);
+    const samples = floatTo16BitPCM(pcm);
+    const encoder = new lamejs.Mp3Encoder(1, SAMPLE_RATE, 128);
+    const blockSize = 1152;
+    const mp3Data = [];
+    for (let i = 0; i < samples.length; i += blockSize) {
+      const chunk = samples.subarray(i, i + blockSize);
+      const mp3buf = encoder.encodeBuffer(chunk);
+      if (mp3buf.length > 0) mp3Data.push(mp3buf);
+    }
+    const end = encoder.flush();
+    if (end.length > 0) mp3Data.push(end);
+    const blob = new Blob(mp3Data, {type:'audio/mp3'});
+    downloadBlob(blob, song.name + '.mp3');
+    setStatus('MP3 exported: ' + song.name + '.mp3');
+  }, 50);
+}
+
+function exportIno(song) {
+  if (!song) { setStatus('Generate a song first.', true); return; }
+  const ino = makeArduinoCode(song);
+  downloadBlob(new Blob([ino], {type:'text/plain'}), safeName(song.name) + '.ino');
+  setStatus('Arduino .ino exported. Load it in Arduino IDE, open Serial Monitor, send b to start.');
+}
+
+function exportSongJson(song) {
+  if (!song) { setStatus('Generate a song first.', true); return; }
+  const text = $('songText').value || JSON.stringify({
+    name: song.name,
+    settings: song.settings,
+    melodyNotes: song.events.map(e=>e.note),
+    durations: song.events.map(e=>e.dur),
+    harmonyNotes: song.events.map(e=>e.harmony),
+    bassNotes: song.events.map(e=>e.bass)
+  }, null, 2);
+  downloadBlob(new Blob([text], {type:'application/json'}), safeName(song.name) + '.music.json');
+  setStatus('Song JSON exported for SevenSeg Quest Maker.');
+}
+
+function listBytes(arr) {
+  let out = '';
+  for (let i = 0; i < arr.length; i++) {
+    if (i % 16 === 0) out += '\n  ';
+    out += String(arr[i]).padStart(3, ' ') + (i === arr.length - 1 ? '' : ',');
+  }
+  return out + '\n';
+}
+
+function makeArduinoCode(song) {
+  const notes = song.events.map(e => e.note || 0);
+  const durs = song.events.map(e => e.dur || 12);
+  const harmony = song.events.map(e => e.harmony || 0);
+  const bass = song.events.map(e => e.bass || 0);
+  const bpm = song.settings.bpm;
+  const name = safeName(song.name);
+
+  return `/*
+  ${name}.ino
+  Generated by 8-bit JRPG Chiptune Song Machine
+
+  Hardware:
+    D9  = square wave melody A
+    D10 = square wave melody B
+    D11 = bass frequency output for external triangle-wave hardware
+
+  Serial:
+    b = start
+    s = stop
+    l = toggle loop
+
+  Notes:
+    - Uses Timer1.
+    - Direct PORTB writes are used for lower CPU than digitalWrite().
+    - D9/D10/D11 are PB1/PB2/PB3 on Arduino Nano / ATmega328P.
+*/
+
+#include <Arduino.h>
+#include <avr/pgmspace.h>
+#include <avr/interrupt.h>
+
+#define BPM ${bpm}
+#define TICKS_PER_BEAT 24
+#define TIMER_TICK_US 16
+
+#define BIT_MELODY_A _BV(PB1) // D9
+#define BIT_MELODY_B _BV(PB2) // D10
+#define BIT_BASS     _BV(PB3) // D11
+
+const uint8_t melodyNotes[] PROGMEM = {${listBytes(notes)}};
+const uint8_t melodyDur[] PROGMEM = {${listBytes(durs)}};
+const uint8_t harmonyNotes[] PROGMEM = {${listBytes(harmony)}};
+const uint8_t bassNotes[] PROGMEM = {${listBytes(bass)}};
+
+const uint16_t NOTE_COUNT = sizeof(melodyNotes) / sizeof(melodyNotes[0]);
+typedef char dur_size_must_match[(sizeof(melodyDur) == sizeof(melodyNotes)) ? 1 : -1];
+typedef char harmony_size_must_match[(sizeof(harmonyNotes) == sizeof(melodyNotes)) ? 1 : -1];
+typedef char bass_size_must_match[(sizeof(bassNotes) == sizeof(melodyNotes)) ? 1 : -1];
+
+volatile uint16_t halfA = 0, halfB = 0, halfBass = 0;
+volatile uint16_t cntA = 0, cntB = 0, cntBass = 0;
+volatile uint8_t outState = 0;
+
+bool playing = false;
+bool loopSong = true;
+uint16_t songIndex = 0;
+unsigned long nextEventMs = 0;
+
+const uint16_t halfPeriodUs_C2_C6[] PROGMEM = {
+  7645,7215,6810,6428,6067,5727,5405,5102,4816,4545,4290,4050,
+  3822,3608,3405,3214,3034,2863,2703,2551,2408,2273,2145,2025,
+  1911,1804,1703,1607,1517,1432,1351,1276,1204,1136,1073,1012,
+   956, 902, 851, 804, 758, 716, 676, 638, 602, 568, 536, 506,
+   478
+};
+
+uint16_t midiToHalfPeriodUs(uint8_t midi) {
+  if (midi == 0) return 0;
+  if (midi < 36) midi = 36;
+  if (midi > 84) midi = 84;
+  return pgm_read_word(&halfPeriodUs_C2_C6[midi - 36]);
+}
+
+void setBitLow(uint8_t bitMask) {
+  outState &= ~bitMask;
+  PORTB &= ~bitMask;
+}
+
+void setVoice(volatile uint16_t &half, volatile uint16_t &cnt, uint8_t bitMask, uint8_t midi) {
+  noInterrupts();
+  half = midiToHalfPeriodUs(midi);
+  cnt = 0;
+  if (half == 0) setBitLow(bitMask);
+  interrupts();
+}
+
+void silenceAll() {
+  setVoice(halfA, cntA, BIT_MELODY_A, 0);
+  setVoice(halfB, cntB, BIT_MELODY_B, 0);
+  setVoice(halfBass, cntBass, BIT_BASS, 0);
+}
+
+uint16_t ticksToMs(uint8_t ticks) {
+  return (uint32_t)ticks * 60000UL / ((uint32_t)BPM * TICKS_PER_BEAT);
+}
+
+void startSong() {
+  playing = true;
+  songIndex = 0;
+  nextEventMs = 0;
+}
+
+void stopSong() {
+  playing = false;
+  silenceAll();
+}
+
+void serviceSong() {
+  if (!playing) return;
+  unsigned long now = millis();
+  if (nextEventMs != 0 && (long)(now - nextEventMs) < 0) return;
+
+  if (songIndex >= NOTE_COUNT) {
+    if (loopSong) songIndex = 0;
+    else { stopSong(); return; }
+  }
+
+  uint8_t n = pgm_read_byte(&melodyNotes[songIndex]);
+  uint8_t d = pgm_read_byte(&melodyDur[songIndex]);
+  uint8_t h = pgm_read_byte(&harmonyNotes[songIndex]);
+  uint8_t b = pgm_read_byte(&bassNotes[songIndex]);
+
+  setVoice(halfA, cntA, BIT_MELODY_A, n);
+  setVoice(halfB, cntB, BIT_MELODY_B, h);
+  setVoice(halfBass, cntBass, BIT_BASS, b);
+
+  nextEventMs = now + ticksToMs(d);
+  songIndex++;
+}
+
+ISR(TIMER1_COMPA_vect) {
+  if (halfA) {
+    cntA += TIMER_TICK_US;
+    if (cntA >= halfA) {
+      cntA = 0;
+      outState ^= BIT_MELODY_A;
+    }
+  }
+  if (halfB) {
+    cntB += TIMER_TICK_US;
+    if (cntB >= halfB) {
+      cntB = 0;
+      outState ^= BIT_MELODY_B;
+    }
+  }
+  if (halfBass) {
+    cntBass += TIMER_TICK_US;
+    if (cntBass >= halfBass) {
+      cntBass = 0;
+      outState ^= BIT_BASS;
+    }
+  }
+  PORTB = (PORTB & ~(BIT_MELODY_A | BIT_MELODY_B | BIT_BASS)) | (outState & (BIT_MELODY_A | BIT_MELODY_B | BIT_BASS));
+}
+
+void setupTimer1() {
+  noInterrupts();
+  TCCR1A = 0;
+  TCCR1B = 0;
+  TCNT1 = 0;
+  // 16 MHz / 8 = 2 MHz. One timer count = 0.5 us.
+  // OCR1A = 31 => 16 us interrupt interval.
+  OCR1A = 31;
+  TCCR1B |= (1 << WGM12);
+  TCCR1B |= (1 << CS11);
+  TIMSK1 |= (1 << OCIE1A);
+  interrupts();
+}
+
+void setup() {
+  DDRB |= BIT_MELODY_A | BIT_MELODY_B | BIT_BASS;
+  silenceAll();
+  setupTimer1();
+  Serial.begin(9600);
+  Serial.println(F("Generated battle music ready."));
+  Serial.println(F("Commands: b=start, s=stop, l=toggle loop"));
+  Serial.print(F("Note count: "));
+  Serial.println(NOTE_COUNT);
+}
+
+void loop() {
+  while (Serial.available()) {
+    char c = Serial.read();
+    if (c == 'b' || c == 'B') { startSong(); Serial.println(F("start")); }
+    else if (c == 's' || c == 'S') { stopSong(); Serial.println(F("stop")); }
+    else if (c == 'l' || c == 'L') { loopSong = !loopSong; Serial.println(loopSong ? F("loop on") : F("loop off")); }
+  }
+
+  serviceSong();
+
+  // Your game code can run here.
+  // Avoid long blocking delay() calls.
+}
+`;
+}
+
+function safeName(s) {
+  return String(s).replace(/[^a-zA-Z0-9_\-]+/g, '_').replace(/^_+|_+$/g, '') || 'song';
+}
+
+function downloadBlob(blob, filename) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
+function setStatus(msg, isError=false) {
+  const el = $('status');
+  el.textContent = msg;
+  el.style.color = isError ? 'var(--bad)' : 'var(--muted)';
+}
+
+function updatePreview(song) {
+  if (!song) return;
+  const s = song.settings;
+  const notes = song.events.map(e => midiToName(e.note));
+  const bass = song.events.map(e => midiToName(e.bass));
+  const totalTicks = song.events.reduce((a,e)=>a+e.dur,0);
+  const seconds = totalTicks / TICKS_PER_BEAT * 60 / s.bpm;
+  const midiVals = song.events.map(e => e.bass).filter(Boolean);
+  const minBass = Math.min(...midiVals);
+  const maxBass = Math.max(...midiVals);
+
+  $('summary').innerHTML = `
+    <span class="pill">${song.name}</span>
+    <span class="pill">${song.events.length} events</span>
+    <span class="pill">${seconds.toFixed(1)} sec</span>
+    <span class="pill">${s.bpm} BPM</span>
+    <span class="pill">Scale: ${s.scale}</span>
+    <span class="pill">Type: ${s.harmonyType}% chaotic</span><span class="pill">0% = strict chord tones</span>
+    <span class="pill">Bass: ${midiToName(minBass)}-${midiToName(maxBass)}</span>
+  `;
+
+  $('songText').value = JSON.stringify({
+    name: song.name,
+    settings: song.settings,
+    melodyNotes: song.events.map(e=>e.note),
+    durations: song.events.map(e=>e.dur),
+    harmonyNotes: song.events.map(e=>e.harmony),
+    bassNotes: song.events.map(e=>e.bass),
+    melodyNames: notes,
+    bassNames: bass
+  }, null, 2);
+
+  const grid = $('noteGrid');
+  grid.innerHTML = '';
+  song.events.slice(0, 160).forEach((ev, i) => {
+    const div = document.createElement('div');
+    div.className = 'note' + (i % 4 === 0 ? ' bass' : '');
+    div.textContent = `${midiToName(ev.note)} / ${ev.dur}`;
+    grid.appendChild(div);
+  });
+}
+
+function bindControls() {
+  const outputs = [
+    ['bpm','bpmOut'], ['harmonyType','harmonyTypeOut'], ['leap','leapOut'], ['repetition','repetitionOut'],
+    ['gate','gateOut'], ['swing','swingOut'], ['changePct','changePctOut']
+  ];
+  for (const [input, out] of outputs) {
+    const el = $(input), o = $(out);
+    const update = () => o.textContent = el.value;
+    el.addEventListener('input', update);
+    update();
+  }
+
+  $('songType').addEventListener('change', () => {
+    const type = $('songType').value;
+    if (type === 'battle') { $('bpm').value = 168; $('mood').value = 'aggressive'; $('density').value='busy'; $('leap').value=65; $('harmonyType').value=25; }
+    if (type === 'boss') { $('bpm').value = 188; $('mood').value = 'dark'; $('density').value='manic'; $('leap').value=78; $('harmonyType').value=45; }
+    if (type === 'world') { $('bpm').value = 126; $('mood').value = 'heroic'; $('density').value='normal'; $('leap').value=45; $('harmonyType').value=12; }
+    if (type === 'dungeon') { $('bpm').value = 92; $('mood').value = 'mysterious'; $('density').value='sparse'; $('leap').value=25; $('harmonyType').value=55; }
+    if (type === 'town') { $('bpm').value = 104; $('mood').value = 'relaxed'; $('density').value='normal'; $('leap').value=20; $('harmonyType').value=8; }
+    ['bpm','leap','harmonyType'].forEach(id => $(id).dispatchEvent(new Event('input')));
+  });
+
+  $('generateBtn').addEventListener('click', () => {
+    currentSettings = readSettings();
+    currentSong = generateSong(currentSettings);
+    updatePreview(currentSong);
+    setStatus('Generated: ' + currentSong.name);
+  });
+
+  $('variationBtn').addEventListener('click', () => {
+    currentSettings = readSettings();
+    const pct = Number($('changePct').value);
+    const useUpload = $('useUploadVariation') && $('useUploadVariation').checked && uploadedSong;
+    const baseSong = useUpload ? uploadedSong : currentSong;
+    currentSong = makeVariation(baseSong, currentSettings, pct);
+    updatePreview(currentSong);
+    setStatus('Variation made with ' + pct + '% change' + (useUpload ? ' using uploaded MIDI extraction as base.' : '.'));
+  });
+
+  $('listenBtn').addEventListener('click', () => {
+    if (!currentSong) {
+      currentSettings = readSettings();
+      currentSong = generateSong(currentSettings);
+      updatePreview(currentSong);
+    }
+    playSong(currentSong);
+  });
+
+  $('stopBtn').addEventListener('click', () => {
+    stopAudio();
+    setStatus('Stopped.');
+  });
+
+  $('analyseUploadBtn').addEventListener('click', analyseUploadedAudio);
+  $('playUploadMidiBtn').addEventListener('click', playUploadedMidi);
+
+  $('exportMp3Btn').addEventListener('click', () => exportMp3(currentSong));
+  $('exportJsonBtn').addEventListener('click', () => exportSongJson(currentSong));
+  $('exportInoBtn').addEventListener('click', () => exportIno(currentSong));
+}
+
+bindControls();
+
+// Generate a default song on load.
+currentSettings = readSettings();
+currentSong = generateSong(currentSettings);
+updatePreview(currentSong);
+setStatus('Default song generated. Press “Listen” or change parameters and generate again.');
+</script>
+</body>
+</html>
